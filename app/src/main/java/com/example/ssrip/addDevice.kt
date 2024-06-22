@@ -23,6 +23,7 @@ class addDevice : AppCompatActivity() {
     private val bluetoothAdapter: BluetoothAdapter? by lazy { BluetoothAdapter.getDefaultAdapter() }
     private val REQUEST_ENABLE_BT = 1
     private val REQUEST_FINE_LOCATION = 2
+    private val REQUEST_BLUETOOTH_PERMISSIONS = 3
     private lateinit var deviceListAdapter: ArrayAdapter<String>
     private val deviceList: MutableList<String> = mutableListOf()
 
@@ -47,17 +48,35 @@ class addDevice : AppCompatActivity() {
             return
         }
 
-        if (!bluetoothAdapter!!.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+        // Check if BLUETOOTH_ADMIN permission is granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
+            // Request BLUETOOTH_ADMIN permission
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_ADMIN), REQUEST_ENABLE_BT)
         } else {
-            checkLocationPermission()
+            // Bluetooth is supported and BLUETOOTH_ADMIN permission is granted
+            if (!bluetoothAdapter!!.isEnabled) {
+                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+            } else {
+                checkBluetoothPermissions()
+            }
         }
     }
 
-    private fun checkLocationPermission() {
+
+    private fun checkBluetoothPermissions() {
+        val permissions = mutableListOf<String>()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_FINE_LOCATION)
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+        if (permissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_BLUETOOTH_PERMISSIONS)
         } else {
             startScanning()
         }
@@ -67,7 +86,8 @@ class addDevice : AppCompatActivity() {
         deviceList.clear()
         deviceListAdapter.notifyDataSetChanged()
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED) {
             val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
             registerReceiver(receiver, filter)
             try {
@@ -76,7 +96,7 @@ class addDevice : AppCompatActivity() {
                 Toast.makeText(this, "Permission denied for Bluetooth scanning", Toast.LENGTH_SHORT).show()
             }
         } else {
-            Toast.makeText(this, "Location permission is required for Bluetooth scanning", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Bluetooth and Location permissions are required for scanning", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -100,7 +120,7 @@ class addDevice : AppCompatActivity() {
                         ActivityCompat.requestPermissions(
                             this@addDevice,
                             arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
-                            REQUEST_FINE_LOCATION
+                            REQUEST_BLUETOOTH_PERMISSIONS
                         )
                     }
                 } catch (e: SecurityException) {
@@ -110,26 +130,34 @@ class addDevice : AppCompatActivity() {
         }
     }
 
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            REQUEST_FINE_LOCATION -> {
+            REQUEST_ENABLE_BT -> {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // Permission granted, now enable Bluetooth
+                    val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+                } else {
+                    Toast.makeText(this, "BLUETOOTH_ADMIN permission is required to enable Bluetooth", Toast.LENGTH_SHORT).show()
+                }
+            }
+            REQUEST_FINE_LOCATION, REQUEST_BLUETOOTH_PERMISSIONS -> {
+                if ((grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED })) {
                     startScanning()
                 } else {
-                    Toast.makeText(this, "Location permission is required for Bluetooth scanning", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Bluetooth and Location permissions are required for scanning", Toast.LENGTH_SHORT).show()
                 }
-                return
             }
         }
     }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
-                checkLocationPermission()
+                checkBluetoothPermissions()
             } else {
                 Toast.makeText(this, "Bluetooth must be enabled to scan for devices", Toast.LENGTH_SHORT).show()
             }
