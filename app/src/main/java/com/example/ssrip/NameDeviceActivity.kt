@@ -2,7 +2,6 @@ package com.example.ssrip
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -10,114 +9,95 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 
 class NameDeviceActivity : AppCompatActivity() {
 
-    private lateinit var categoryValueTextView: TextView
+    private lateinit var db: FirebaseFirestore
+    private lateinit var userId: String
+    private lateinit var category: String
+    private lateinit var categoryTextView: TextView
     private lateinit var deviceNameEditText: EditText
     private lateinit var submitButton: Button
     private lateinit var progressBar: ProgressBar
-    private lateinit var category: String
-    private lateinit var uid: String
-    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_name_device)
 
-        categoryValueTextView = findViewById(R.id.categoryValueTextView)
+        db = FirebaseFirestore.getInstance()
+        userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        category = intent.getStringExtra("CATEGORY") ?: return
+
+        categoryTextView = findViewById(R.id.categoryTextView)
         deviceNameEditText = findViewById(R.id.deviceNameEditText)
         submitButton = findViewById(R.id.submitButton)
         progressBar = findViewById(R.id.progressBar)
 
-        // Get data from previous activity
-        category = intent.getStringExtra("CATEGORY") ?: ""
-        uid = intent.getStringExtra("USER_UID") ?: ""
-
-        Log.d("FirestoreDebug", "UID: $uid, Category: $category")
-
-        categoryValueTextView.text = category
+        // Display the selected category
+        categoryTextView.text = "Selected Category: $category"
 
         submitButton.setOnClickListener {
             val deviceName = deviceNameEditText.text.toString().trim()
             if (deviceName.isNotEmpty()) {
-                checkDeviceNameExists(category, deviceName)
+                checkDeviceName(deviceName)
             } else {
-                showToast("Please enter a device name")
+                Toast.makeText(this, "Please enter a device name", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun checkDeviceNameExists(category: String, deviceName: String) {
-        showProgress(true)
-
-        try {
-            // Reference to the collection based on category and user ID
-            val collectionRef = firestore.collection("users").document(uid).collection("devices").document(category)
-
-            // Query to check if the device name exists
-            collectionRef.collection(deviceName).document("info").get()
-                .addOnSuccessListener { documentSnapshot ->
-                    if (documentSnapshot.exists()) {
-                        // Device name already exists
-                        showToast("Device name already exists. Please choose another name.")
-                        showProgress(false)
-                    } else {
-                        // Device name does not exist, proceed to add
-                        createNewDevice(category, deviceName)
-                    }
+    private fun checkDeviceName(deviceName: String) {
+        showProgressBar()
+        db.collection("Data").document(userId).collection(category).document(deviceName).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    hideProgressBar()
+                    Toast.makeText(this, "Device name already exists. Please choose another name.", Toast.LENGTH_LONG).show()
+                } else {
+                    createDevice(deviceName)
                 }
-                .addOnFailureListener { e ->
-                    showToast("Error checking device name: ${e.message}")
-                    showProgress(false)
-                }
-        } catch (e: Exception) {
-            showToast("An unexpected error occurred: ${e.message}")
-            showProgress(false)
-        }
-    }
-
-    private fun createNewDevice(category: String, deviceName: String) {
-        val documentRef = firestore.collection("users").document(uid)
-            .collection("devices").document(category)
-            .collection(deviceName).document("info")
-
-        val data = hashMapOf(
-            "deviceStatus" to "OFF" // Default status when adding a new device
-        )
-
-        documentRef.set(data)
-            .addOnSuccessListener {
-                showToast("Device '$deviceName' added successfully")
-                showProgress(false)
-                moveToNextActivity(deviceName, category)
             }
             .addOnFailureListener { e ->
-                showToast("Error adding device: ${e.message}")
-                showProgress(false)
+                hideProgressBar()
+                Toast.makeText(this, "Error checking device name: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
+    private fun createDevice(deviceName: String) {
+        val deviceData = hashMapOf(
+            "name" to deviceName,
+            "category" to category,
+            "deviceStatus" to "OFF"  // Adding deviceStatus field
+        )
 
-
-    private fun moveToNextActivity(deviceName: String, category: String) {
-        val intent = Intent(this, AddDeviceActivity::class.java).apply {
-            putExtra("USER_UID", uid)
-            putExtra("DEVICE_NAME", deviceName)
-            putExtra("CATEGORY", category)
-        }
-        startActivity(intent)
-        finish()
+        db.collection("Data").document(userId).collection(category).document(deviceName)
+            .set(deviceData)
+            .addOnSuccessListener {
+                hideProgressBar()
+                Toast.makeText(this, "Device added successfully", Toast.LENGTH_SHORT).show()
+                // Passing category and device name to AddDeviceActivity
+                val intent = Intent(this, AddDeviceActivity::class.java).apply {
+                    putExtra("CATEGORY", category)
+                    putExtra("DEVICE_NAME", deviceName)
+                }
+                startActivity(intent)
+                finish()
+            }
+            .addOnFailureListener { e ->
+                hideProgressBar()
+                Toast.makeText(this, "Error adding device: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun showProgressBar() {
+        progressBar.visibility = View.VISIBLE
+        submitButton.isEnabled = false
     }
 
-    private fun showProgress(show: Boolean) {
-        progressBar.visibility = if (show) View.VISIBLE else View.GONE
-        submitButton.isEnabled = !show
+    private fun hideProgressBar() {
+        progressBar.visibility = View.GONE
+        submitButton.isEnabled = true
     }
 }
