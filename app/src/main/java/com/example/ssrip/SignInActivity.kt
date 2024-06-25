@@ -65,16 +65,20 @@ class SignInActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
                         val user = auth.currentUser
-                        // Navigate to your main activity or dashboard
-                        startActivity(Intent(this, DashboardActivity::class.java))
-                        finish()
+                        val uid = user?.uid
+                        if (uid != null) {
+                            val intent = Intent(this, DashboardActivity::class.java).apply {
+                                putExtra("USER_UID", uid)
+                            }
+                            startActivity(intent)
+                            finish()
+                        } else {
+                            hideLoading()
+                            Toast.makeText(baseContext, "Failed to get user UID.", Toast.LENGTH_SHORT).show()
+                        }
                     } else {
-                        // If sign in fails, display a message to the user.
-                        // You can customize the error handling as per your requirements
                         hideLoading()
-                        // Example:
-                        Toast.makeText(baseContext, "Authentication failed.",
-                             Toast.LENGTH_SHORT).show()
+                        Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                     }
                 }
         } else {

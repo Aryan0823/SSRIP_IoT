@@ -24,14 +24,14 @@ class AddDeviceActivity : AppCompatActivity() {
     private lateinit var scanWifiButton: Button
     private lateinit var availableNetworksTextView: TextView
     private lateinit var progressBar: ProgressBar
-
+    private lateinit var uid: String
     private val client = OkHttpClient()
     private val gson = Gson()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_device)
-
+        uid = intent.getStringExtra("USER_UID") ?: ""
         ipAddressEditText = findViewById(R.id.ipAddressEditText)
         ssidEditText = findViewById(R.id.ssidEditText)
         passwordEditText = findViewById(R.id.passwordEditText)
