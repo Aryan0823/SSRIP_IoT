@@ -10,8 +10,8 @@ class DashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
     }
-    fun addDevice(view: View) {
-        val addDeviceIntent = Intent(this, addDevice::class.java)
-        startActivity(addDeviceIntent)
-    }
+//    fun addDevice(view: View) {
+//        val addDeviceIntent = Intent(this, addDevice::class.java)
+//        startActivity(addDeviceIntent)
+//    }
 }
