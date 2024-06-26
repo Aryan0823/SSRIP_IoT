@@ -77,10 +77,11 @@ class NameDeviceActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 hideProgressBar()
                 Toast.makeText(this, "Device added successfully", Toast.LENGTH_SHORT).show()
-                // Passing category and device name to AddDeviceActivity
-                val intent = Intent(this, AddDeviceActivity::class.java).apply {
+                // Passing category and device name to networkActivity
+                val intent = Intent(this, NetworkActivity::class.java).apply {
                     putExtra("CATEGORY", category)
                     putExtra("DEVICE_NAME", deviceName)
+                    putExtra("USER_UID", userId)
                 }
                 startActivity(intent)
                 finish()

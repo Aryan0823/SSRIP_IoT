@@ -1,12 +1,5 @@
 package com.example.ssrip
 
-import android.content.Context
-import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
-import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -19,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
-import org.json.JSONObject
 import java.io.IOException
 
 class AddDeviceActivity : AppCompatActivity() {
@@ -38,8 +30,6 @@ class AddDeviceActivity : AppCompatActivity() {
     private lateinit var deviceName: String
     private val client = OkHttpClient()
     private val gson = Gson()
-    private lateinit var connectivityManager: ConnectivityManager
-    private lateinit var networkCallback: ConnectivityManager.NetworkCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,10 +49,9 @@ class AddDeviceActivity : AppCompatActivity() {
         availableNetworksTextView = findViewById(R.id.availableNetworksTextView)
         progressBar = findViewById(R.id.progressBar)
 
+        // Display category and device name
         categoryTextView.text = "Category: $category"
         deviceNameTextView.text = "Device Name: $deviceName"
-
-        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
         scanWifiButton.setOnClickListener {
             val ipAddress = ipAddressEditText.text.toString()
@@ -77,44 +66,12 @@ class AddDeviceActivity : AppCompatActivity() {
             val ipAddress = ipAddressEditText.text.toString()
             val ssid = ssidEditText.text.toString()
             val password = passwordEditText.text.toString()
-            if (ipAddress.isNotEmpty() && ssid.isNotEmpty() && password.isNotEmpty() && uid.isNotEmpty()) {
+            if (ipAddress.isNotEmpty() && ssid.isNotEmpty() && password.isNotEmpty()) {
                 submitCredentials(ipAddress, ssid, password, category, deviceName, uid)
             } else {
                 showToast("Please fill in all fields")
             }
         }
-
-        setupNetworkCallback()
-    }
-
-    private fun setupNetworkCallback() {
-        networkCallback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                super.onAvailable(network)
-                runOnUiThread {
-                    showToast("Network connection restored")
-                    // You might want to retry the last operation here
-                }
-            }
-
-            override fun onLost(network: Network) {
-                super.onLost(network)
-                runOnUiThread {
-                    showToast("Network connection lost")
-                }
-            }
-        }
-
-        val networkRequest = NetworkRequest.Builder()
-            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-            .build()
-
-        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        connectivityManager.unregisterNetworkCallback(networkCallback)
     }
 
     private fun scanNetworks(ipAddress: String) {
@@ -159,8 +116,8 @@ class AddDeviceActivity : AppCompatActivity() {
             .addPathSegment("setting")
             .addQueryParameter("ssid", ssid)
             .addQueryParameter("pass", password)
-            .addQueryParameter("deviceName", deviceName)
             .addQueryParameter("category", category)
+            .addQueryParameter("deviceName", deviceName)
             .addQueryParameter("uid", uid)
             .build()
 
@@ -171,19 +128,11 @@ class AddDeviceActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val response = client.newCall(request).execute()
-                val responseBody = response.body?.string()
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && responseBody != null) {
-                        val jsonResponse = JSONObject(responseBody)
-                        if (jsonResponse.getBoolean("success")) {
-                            showToast("Credentials submitted successfully")
-                            // Instead of finish(), start an intent to go back to the dashboard
-                            val intent = Intent(this@AddDeviceActivity, DashboardActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                            startActivity(intent)
-                        } else {
-                            showToast("Error: ${jsonResponse.getString("message")}")
-                        }
+                    if (response.isSuccessful) {
+                        showToast("Credentials submitted successfully")
+                        // You might want to navigate back to the previous activity or main screen here
+                        finish()
                     } else {
                         showToast("Error: ${response.code}")
                     }
