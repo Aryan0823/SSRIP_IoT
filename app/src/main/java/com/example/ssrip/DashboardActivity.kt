@@ -15,6 +15,8 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
     private lateinit var tvWelcome: TextView
+    private lateinit var tvUserId: TextView
+    private var userId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,16 +29,21 @@ class DashboardActivity : AppCompatActivity() {
         database = FirebaseDatabase.getInstance().reference
 
         tvWelcome = findViewById(R.id.tvWelcome)
+        tvUserId = findViewById(R.id.tvUserId)
+
+        // Get user ID from intent
+        userId = intent.getStringExtra("USER_UID")
 
         // Check if user is signed in
         val currentUser = auth.currentUser
-        if (currentUser == null) {
-            // If not signed in, redirect to login activity
-            startActivity(Intent(this, SignInActivity::class.java))
+        if (currentUser == null || userId == null) {
+            // If not signed in or no user ID, redirect to main activity
+            startActivity(Intent(this, MainActivity::class.java))
             finish()
         } else {
-            // User is signed in, display welcome message
+            // User is signed in, display welcome message and user ID
             tvWelcome.text = "Welcome, ${currentUser.email}"
+            tvUserId.text = "User ID: $userId"
         }
     }
 
@@ -46,21 +53,25 @@ class DashboardActivity : AppCompatActivity() {
             val addDeviceIntent = Intent(this, AddDeviceCategoryActivity::class.java)
             startActivity(addDeviceIntent)
         } else {
-            // If session expired, redirect to login
+            // If session expired, redirect to main activity
             Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, SignInActivity::class.java))
+            startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
     }
 
-    // You can add more functions here for other dashboard functionalities
+    fun signOut(view: View) {
+        auth.signOut()
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
 
     override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
         val currentUser = auth.currentUser
         if(currentUser == null){
-            startActivity(Intent(this, SignInActivity::class.java))
+            startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
     }

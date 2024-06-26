@@ -45,6 +45,8 @@ class SignInActivity : AppCompatActivity() {
 
         forgotPasswordText.setOnClickListener {
             // Handle forgot password action here
+            // For now, we'll just show a toast
+            Toast.makeText(this, "Forgot password functionality not implemented yet", Toast.LENGTH_SHORT).show()
         }
 
         signUpLink.setOnClickListener {
@@ -54,48 +56,45 @@ class SignInActivity : AppCompatActivity() {
     }
 
     private fun signIn() {
-        val email = emailInput.text.toString()
-        val password = passwordInput.text.toString()
+        val email = emailInput.text.toString().trim()
+        val password = passwordInput.text.toString().trim()
 
-        if (email.isNotEmpty() && password.isNotEmpty()) {
-            showLoading()
-
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        // Sign in success, update UI with the signed-in user's information
-                        val user = auth.currentUser
-                        val uid = user?.uid
-                        if (uid != null) {
-                            val intent = Intent(this, DashboardActivity::class.java).apply {
-                                putExtra("USER_UID", uid)
-                            }
-                            startActivity(intent)
-                            finish()
-                        } else {
-                            hideLoading()
-                            Toast.makeText(baseContext, "Failed to get user UID.", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        hideLoading()
-                        Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-        } else {
-            if (email.isEmpty()) {
-                emailInput.error = "Email cannot be empty"
-            }
-            if (password.isEmpty()) {
-                passwordInput.error = "Password cannot be empty"
-            }
+        if (email.isEmpty()) {
+            emailInput.error = "Email is required"
+            emailInput.requestFocus()
+            return
         }
+
+        if (password.isEmpty()) {
+            passwordInput.error = "Password is required"
+            passwordInput.requestFocus()
+            return
+        }
+
+        showLoading()
+
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                hideLoading()
+                if (task.isSuccessful) {
+                    // Sign in success, return to MainActivity
+                    setResult(RESULT_OK)
+                    finish()
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Toast.makeText(baseContext, "Authentication failed: ${task.exception?.message}",
+                        Toast.LENGTH_LONG).show()
+                }
+            }
     }
 
     private fun showLoading() {
         loadingProgressBar.visibility = View.VISIBLE
+        signInButton.isEnabled = false
     }
 
     private fun hideLoading() {
         loadingProgressBar.visibility = View.GONE
+        signInButton.isEnabled = true
     }
 }

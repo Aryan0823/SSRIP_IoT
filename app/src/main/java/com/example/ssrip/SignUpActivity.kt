@@ -4,22 +4,26 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.checkbox.MaterialCheckBox
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class SignUpActivity : AppCompatActivity() {
 
-    private lateinit var firstNameInputLayout: TextInputLayout
-    private lateinit var lastNameInputLayout: TextInputLayout
-    private lateinit var emailInputLayout: TextInputLayout
-    private lateinit var phoneNumberInputLayout: TextInputLayout
-    private lateinit var passwordInputLayout: TextInputLayout
+    private lateinit var firstNameInput: EditText
+    private lateinit var lastNameInput: EditText
+    private lateinit var emailInput: EditText
+    private lateinit var phoneNumberInput: EditText
+    private lateinit var passwordInput: EditText
     private lateinit var termsCheckbox: MaterialCheckBox
+    private lateinit var signUpButton: Button
+    private lateinit var signInLink: View
+    private lateinit var progressBar: ProgressBar
 
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
@@ -32,46 +36,50 @@ class SignUpActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
-        firstNameInputLayout = findViewById(R.id.firstNameInputLayout)
-        lastNameInputLayout = findViewById(R.id.lastNameInputLayout)
-        emailInputLayout = findViewById(R.id.emailInputLayout)
-        phoneNumberInputLayout = findViewById(R.id.phoneNumberInputLayout)
-        passwordInputLayout = findViewById(R.id.passwordInputLayout)
+        // Initialize views
+        firstNameInput = findViewById(R.id.firstNameInput)
+        lastNameInput = findViewById(R.id.lastNameInput)
+        emailInput = findViewById(R.id.emailInput)
+        phoneNumberInput = findViewById(R.id.phoneNumberInput)
+        passwordInput = findViewById(R.id.passwordInput)
         termsCheckbox = findViewById(R.id.termsCheckbox)
+        signUpButton = findViewById(R.id.signUpButton)
+        signInLink = findViewById(R.id.signInLink)
+        progressBar = findViewById(R.id.progressBar)
 
-        findViewById<View>(R.id.signUpButton).setOnClickListener { registerUser() }
-        findViewById<View>(R.id.signInLinkTextView).setOnClickListener { navigateToSignIn() }
+        signUpButton.setOnClickListener { registerUser() }
+        signInLink.setOnClickListener { navigateToSignIn() }
     }
 
     private fun registerUser() {
-        val firstName = firstNameInputLayout.editText?.text.toString().trim()
-        val lastName = lastNameInputLayout.editText?.text.toString().trim()
-        val email = emailInputLayout.editText?.text.toString().trim()
-        val phoneNumber = phoneNumberInputLayout.editText?.text.toString().trim()
-        val password = passwordInputLayout.editText?.text.toString().trim()
+        val firstName = firstNameInput.text.toString().trim()
+        val lastName = lastNameInput.text.toString().trim()
+        val email = emailInput.text.toString().trim()
+        val phoneNumber = phoneNumberInput.text.toString().trim()
+        val password = passwordInput.text.toString().trim()
 
         if (TextUtils.isEmpty(firstName)) {
-            firstNameInputLayout.error = "First Name is required"
+            firstNameInput.error = "First Name is required"
             return
         }
 
         if (TextUtils.isEmpty(lastName)) {
-            lastNameInputLayout.error = "Last Name is required"
+            lastNameInput.error = "Last Name is required"
             return
         }
 
         if (TextUtils.isEmpty(email)) {
-            emailInputLayout.error = "Email is required"
+            emailInput.error = "Email is required"
             return
         }
 
         if (TextUtils.isEmpty(phoneNumber)) {
-            phoneNumberInputLayout.error = "Phone Number is required"
+            phoneNumberInput.error = "Phone Number is required"
             return
         }
 
         if (TextUtils.isEmpty(password)) {
-            passwordInputLayout.error = "Password is required"
+            passwordInput.error = "Password is required"
             return
         }
 
@@ -79,6 +87,8 @@ class SignUpActivity : AppCompatActivity() {
             Toast.makeText(this, "You must agree to the terms of use", Toast.LENGTH_LONG).show()
             return
         }
+
+        showLoading()
 
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
@@ -95,13 +105,16 @@ class SignUpActivity : AppCompatActivity() {
 
                     firestore.collection("users").document(uid).set(userMap)
                         .addOnSuccessListener {
+                            hideLoading()
                             Toast.makeText(this, "User registered successfully", Toast.LENGTH_LONG).show()
                             navigateToSignIn()
                         }
                         .addOnFailureListener {
+                            hideLoading()
                             Toast.makeText(this, "Failed to register user", Toast.LENGTH_LONG).show()
                         }
                 } else {
+                    hideLoading()
                     Toast.makeText(this, "Registration failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -111,5 +124,15 @@ class SignUpActivity : AppCompatActivity() {
         val intent = Intent(this, SignInActivity::class.java)
         startActivity(intent)
         finish()
+    }
+
+    private fun showLoading() {
+        progressBar.visibility = View.VISIBLE
+        signUpButton.isEnabled = false
+    }
+
+    private fun hideLoading() {
+        progressBar.visibility = View.GONE
+        signUpButton.isEnabled = true
     }
 }
