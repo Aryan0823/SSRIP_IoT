@@ -1,182 +1,165 @@
 package com.example.ssrip
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.*
-import java.io.IOException
+import kotlinx.coroutines.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 
 class AddDeviceActivity : AppCompatActivity() {
 
-    private lateinit var ipAddressEditText: EditText
-    private lateinit var ssidEditText: EditText
-    private lateinit var passwordEditText: EditText
-    private lateinit var categoryTextView: TextView
-    private lateinit var deviceNameTextView: TextView
-    private lateinit var submitButton: Button
-    private lateinit var scanWifiButton: Button
-    private lateinit var availableNetworksTextView: TextView
+    private lateinit var tvCategory: TextView
+    private lateinit var tvDeviceName: TextView
+    private lateinit var etIpAddress: EditText
+    private lateinit var btnScanNetworks: Button
+    private lateinit var tvAvailableNetworks: TextView
+    private lateinit var etSsid: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var btnSubmit: Button
     private lateinit var progressBar: ProgressBar
-    private lateinit var uid: String
+
     private lateinit var category: String
     private lateinit var deviceName: String
-    private val client = OkHttpClient()
-    private val gson = Gson()
+    private lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_device)
 
-        uid = intent.getStringExtra("USER_UID") ?: ""
+        initializeViews()
+        setInitialData()
+        setupListeners()
+    }
+
+    private fun initializeViews() {
+        tvCategory = findViewById(R.id.tvCategory)
+        tvDeviceName = findViewById(R.id.tvDeviceName)
+        etIpAddress = findViewById(R.id.etIpAddress)
+        btnScanNetworks = findViewById(R.id.btnScanNetworks)
+        tvAvailableNetworks = findViewById(R.id.tvAvailableNetworks)
+        etSsid = findViewById(R.id.etSsid)
+        etPassword = findViewById(R.id.etPassword)
+        btnSubmit = findViewById(R.id.btnSubmit)
+        progressBar = findViewById(R.id.progressBar)
+    }
+
+    private fun setInitialData() {
         category = intent.getStringExtra("CATEGORY") ?: ""
         deviceName = intent.getStringExtra("DEVICE_NAME") ?: ""
+        userId = intent.getStringExtra("USER_UID") ?: ""
 
-        ipAddressEditText = findViewById(R.id.ipAddressEditText)
-        ssidEditText = findViewById(R.id.ssidEditText)
-        passwordEditText = findViewById(R.id.passwordEditText)
-        categoryTextView = findViewById(R.id.categoryTextView)
-        deviceNameTextView = findViewById(R.id.deviceNameTextView)
-        submitButton = findViewById(R.id.submitButton)
-        scanWifiButton = findViewById(R.id.scanWifiButton)
-        availableNetworksTextView = findViewById(R.id.availableNetworksTextView)
-        progressBar = findViewById(R.id.progressBar)
+        tvCategory.text = "Category: $category"
+        tvDeviceName.text = "Device Name: $deviceName"
+    }
 
-        // Display category and device name
-        categoryTextView.text = "Category: $category"
-        deviceNameTextView.text = "Device Name: $deviceName"
-
-        scanWifiButton.setOnClickListener {
-            val ipAddress = ipAddressEditText.text.toString()
-            if (ipAddress.isNotEmpty()) {
-                scanNetworks(ipAddress)
-            } else {
-                showToast("Please enter an IP address")
-            }
+    private fun setupListeners() {
+        btnScanNetworks.setOnClickListener {
+            scanWifiNetworks()
         }
 
-        submitButton.setOnClickListener {
-            val ipAddress = ipAddressEditText.text.toString()
-            val ssid = ssidEditText.text.toString()
-            val password = passwordEditText.text.toString()
-            if (ipAddress.isNotEmpty() && ssid.isNotEmpty() && password.isNotEmpty()) {
-                submitCredentials(ipAddress, ssid, password, category, deviceName, uid)
-            } else {
-                showToast("Please fill in all fields")
-            }
+        btnSubmit.setOnClickListener {
+            submitWifiCredentials()
         }
     }
 
-    private fun scanNetworks(ipAddress: String) {
-        showProgress(true)
-        val request = Request.Builder()
-            .url("http://$ipAddress/scan")
-            .post(RequestBody.create(null, ByteArray(0)))
-            .build()
+    private fun scanWifiNetworks() {
+        val ipAddress = etIpAddress.text.toString()
+        if (ipAddress.isEmpty()) {
+            Toast.makeText(this, "Please enter an IP address", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        progressBar.visibility = View.VISIBLE
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    val responseBody = response.body?.string()
-                    val networkList = parseNetworkList(responseBody)
-                    withContext(Dispatchers.Main) {
-                        displayNetworks(networkList)
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        showToast("Error: ${response.code}")
-                    }
-                }
-            } catch (e: IOException) {
-                Log.e("AddDeviceActivity", "Network error: ${e.message}", e)
+                val networks = performNetworkScan(ipAddress)
                 withContext(Dispatchers.Main) {
-                    showToast("Network error: ${e.message}")
+                    displayNetworks(networks)
+                    progressBar.visibility = View.GONE
                 }
-            } finally {
+            } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    showProgress(false)
+                    Toast.makeText(this@AddDeviceActivity, "Error scanning networks: ${e.message}", Toast.LENGTH_LONG).show()
+                    progressBar.visibility = View.GONE
                 }
             }
         }
     }
 
-    private fun submitCredentials(ipAddress: String, ssid: String, password: String, category: String, deviceName: String, uid: String) {
-        showProgress(true)
-        val url = HttpUrl.Builder()
-            .scheme("http")
-            .host(ipAddress)
-            .addPathSegment("setting")
-            .addQueryParameter("ssid", ssid)
-            .addQueryParameter("pass", password)
-            .addQueryParameter("category", category)
-            .addQueryParameter("deviceName", deviceName)
-            .addQueryParameter("uid", uid)
-            .build()
+    private suspend fun performNetworkScan(ipAddress: String): List<String> = withContext(Dispatchers.IO) {
+        val url = URL("http://$ipAddress/scan")
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.connectTimeout = 5000
 
-        val request = Request.Builder()
-            .url(url)
-            .build()
+        val responseCode = connection.responseCode
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            val response = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
+            val jsonArray = JSONArray(response)
+            return@withContext List(jsonArray.length()) { i ->
+                val network = jsonArray.getJSONObject(i)
+                "${network.getString("ssid")} (${network.getInt("rssi")} dBm)"
+            }
+        } else {
+            throw Exception("HTTP error code: $responseCode")
+        }
+    }
 
-        lifecycleScope.launch(Dispatchers.IO) {
+    private fun displayNetworks(networks: List<String>) {
+        tvAvailableNetworks.text = networks.joinToString("\n")
+    }
+
+    private fun submitWifiCredentials() {
+        val ipAddress = etIpAddress.text.toString()
+        val ssid = etSsid.text.toString()
+        val password = etPassword.text.toString()
+
+        if (ipAddress.isEmpty() || ssid.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        progressBar.visibility = View.VISIBLE
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = client.newCall(request).execute()
+                val success = sendCredentialsToESP(ipAddress, ssid, password)
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        showToast("Credentials submitted successfully")
-                        // You might want to navigate back to the previous activity or main screen here
+                    if (success) {
+                        Toast.makeText(this@AddDeviceActivity, "Credentials sent successfully", Toast.LENGTH_LONG).show()
                         finish()
                     } else {
-                        showToast("Error: ${response.code}")
+                        Toast.makeText(this@AddDeviceActivity, "Failed to send credentials", Toast.LENGTH_LONG).show()
                     }
+                    progressBar.visibility = View.GONE
                 }
-            } catch (e: IOException) {
-                Log.e("AddDeviceActivity", "Network error: ${e.message}", e)
+            } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    showToast("Network error: ${e.message}")
-                }
-            } finally {
-                withContext(Dispatchers.Main) {
-                    showProgress(false)
+                    Toast.makeText(this@AddDeviceActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    progressBar.visibility = View.GONE
                 }
             }
         }
     }
 
-    private fun parseNetworkList(json: String?): List<WifiNetwork> {
-        if (json.isNullOrEmpty()) return emptyList()
-        val type = object : TypeToken<List<WifiNetwork>>() {}.type
-        return gson.fromJson(json, type)
-    }
+    private suspend fun sendCredentialsToESP(ipAddress: String, ssid: String, password: String): Boolean = withContext(Dispatchers.IO) {
+        val url = URL("http://$ipAddress/setting?ssid=$ssid&pass=$password&deviceName=$deviceName&category=$category&uid=$userId")
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "GET"
+        connection.connectTimeout = 5000
 
-    private fun displayNetworks(networks: List<WifiNetwork>) {
-        val networkText = networks.joinToString("\n") { "${it.ssid} (${it.rssi} dBm)" }
-        availableNetworksTextView.text = networkText
+        val responseCode = connection.responseCode
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            val response = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
+            val jsonResponse = JSONObject(response)
+            return@withContext jsonResponse.getBoolean("success")
+        } else {
+            throw Exception("HTTP error code: $responseCode")
+        }
     }
-
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun showProgress(show: Boolean) {
-        progressBar.visibility = if (show) View.VISIBLE else View.GONE
-        submitButton.isEnabled = !show
-        scanWifiButton.isEnabled = !show
-        ipAddressEditText.isEnabled = !show
-        ssidEditText.isEnabled = !show
-        passwordEditText.isEnabled = !show
-    }
-
-    data class WifiNetwork(
-        val ssid: String,
-        val rssi: Int,
-        val secure: Int
-    )
 }
