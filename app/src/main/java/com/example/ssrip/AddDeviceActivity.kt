@@ -1,5 +1,6 @@
 package com.example.ssrip
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -131,7 +132,14 @@ class AddDeviceActivity : AppCompatActivity() {
                 val success = sendCredentialsToESP(ipAddress, ssid, password)
                 withContext(Dispatchers.Main) {
                     if (success) {
-                        Toast.makeText(this@AddDeviceActivity, "Credentials sent successfully", Toast.LENGTH_LONG).show()
+                        // Navigate to another activity with the submitted data
+                        val intent = Intent(this@AddDeviceActivity, WifiSwitchActivity::class.java).apply {
+                            putExtra("SSID", ssid)
+                            putExtra("PASSWORD", password)
+                            putExtra("CATEGORY", category)
+                            putExtra("DEVICE_NAME", deviceName)
+                        }
+                        startActivity(intent)
                         finish()
                     } else {
                         Toast.makeText(this@AddDeviceActivity, "Failed to send credentials", Toast.LENGTH_LONG).show()
