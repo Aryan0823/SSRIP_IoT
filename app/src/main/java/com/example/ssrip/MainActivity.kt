@@ -1,81 +1,53 @@
 package com.example.ssrip
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.Button
-import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.view.isVisible
 import com.google.firebase.auth.FirebaseAuth
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var progressBar: ProgressBar
+    private lateinit var progressBar: View
     private lateinit var loginCard: CardView
-    private lateinit var loginButton: Button
-    private lateinit var signUpButton: Button
+    private lateinit var loginButton: View
+    private lateinit var signUpButton: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize Firebase Auth
-        auth = FirebaseAuth.getInstance()
-
-        // Initialize views
         progressBar = findViewById(R.id.progressBar)
         loginCard = findViewById(R.id.loginCard)
         loginButton = findViewById(R.id.loginButton)
         signUpButton = findViewById(R.id.signUpButton)
 
-        // Set click listeners
-        loginButton.setOnClickListener { navigateToSignIn() }
-        signUpButton.setOnClickListener { navigateToSignUp() }
+        checkLoginStatus()
 
-        // Check user authentication status
-        checkUserAuthentication()
+        loginButton.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
+
+        signUpButton.setOnClickListener {
+            startActivity(Intent(this, SignUpActivity::class.java))
+        }
     }
 
-    private fun checkUserAuthentication() {
-        progressBar.visibility = View.VISIBLE
-        loginCard.visibility = View.GONE
+    private fun checkLoginStatus() {
+        progressBar.isVisible = true
+        loginCard.isVisible = false
 
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            navigateToDashboard(currentUser.uid)
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            val userId = user.uid
+            val intent = Intent(this, DashboardActivity::class.java)
+            intent.putExtra("userId", userId)
+            startActivity(intent)
+            finish()
         } else {
-            progressBar.visibility = View.GONE
-            loginCard.visibility = View.VISIBLE
+            progressBar.isVisible = false
+            loginCard.isVisible = true
         }
-    }
-
-    private fun navigateToSignIn() {
-        startActivityForResult(Intent(this, SignInActivity::class.java), RC_SIGN_IN)
-    }
-
-    private fun navigateToSignUp() {
-        startActivity(Intent(this, SignUpActivity::class.java))
-    }
-
-    private fun navigateToDashboard(userId: String) {
-        val intent = Intent(this, DashboardActivity::class.java).apply {
-            putExtra("USER_UID", userId)
-        }
-        startActivity(intent)
-        finish()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RC_SIGN_IN && resultCode == RESULT_OK) {
-            checkUserAuthentication()
-        }
-    }
-
-    companion object {
-        private const val RC_SIGN_IN = 123
     }
 }

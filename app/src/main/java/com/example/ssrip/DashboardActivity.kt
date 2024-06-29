@@ -1,78 +1,87 @@
 package com.example.ssrip
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 
-class DashboardActivity : AppCompatActivity() {
+class DashboardActivity : BaseActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var database: DatabaseReference
-    private lateinit var tvWelcome: TextView
-    private lateinit var tvUserId: TextView
-    private var userId: String? = null
+    private lateinit var logoutButton: Button
+    private lateinit var welcomeTextView: TextView
+    private lateinit var userIdTextView: TextView
+    private lateinit var addDeviceButton: Button
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-        // Initialize Firebase Auth
-        auth = FirebaseAuth.getInstance()
+        initializeViews()
+        setupListeners()
+        displayUserInfo()
+        db = FirebaseFirestore.getInstance()
+    }
 
-        // Initialize Firebase Database
-        database = FirebaseDatabase.getInstance().reference
+    private fun initializeViews() {
+        logoutButton = findViewById(R.id.btnSignOut)
+        welcomeTextView = findViewById(R.id.tvWelcome)
+        userIdTextView = findViewById(R.id.tvUserId)
+        addDeviceButton = findViewById(R.id.btnAddDevice)
+    }
 
-        tvWelcome = findViewById(R.id.tvWelcome)
-        tvUserId = findViewById(R.id.tvUserId)
+    private fun setupListeners() {
+        logoutButton.setOnClickListener {
+            logout()
+        }
 
-        // Get user ID from intent
-        userId = intent.getStringExtra("USER_UID")
-
-        // Check if user is signed in
-        val currentUser = auth.currentUser
-        if (currentUser == null || userId == null) {
-            // If not signed in or no user ID, redirect to main activity
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-        } else {
-            // User is signed in, display welcome message and user ID
-            tvWelcome.text = "Welcome, ${currentUser.email}"
-            tvUserId.text = "User ID: $userId"
+        addDeviceButton.setOnClickListener {
+            val intent = Intent(this, AddDeviceCategoryActivity::class.java)
+            startActivity(intent)
         }
     }
 
-    fun addDevice(view: View) {
-        // Check if user is still authenticated
-        if (auth.currentUser != null) {
-            val addDeviceIntent = Intent(this, AddDeviceCategoryActivity::class.java)
-            startActivity(addDeviceIntent)
-        } else {
-            // If session expired, redirect to main activity
-            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-        }
+    private fun displayUserInfo() {
+        val userDetails = getUserDetails()
+        val userId = userDetails[SessionManager.KEY_USER_ID]
+        val email = userDetails[SessionManager.KEY_EMAIL]
+
+        welcomeTextView.text = "Welcome, $email"
+        userIdTextView.text = "User ID: $userId"
     }
 
-    fun signOut(view: View) {
-        auth.signOut()
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
+    override fun onResume() {
+        super.onResume()
+        refreshData()
     }
 
-    override fun onStart() {
-        super.onStart()
-        // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = auth.currentUser
-        if(currentUser == null){
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
+    override fun onNetworkAvailable() {
+        Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
+        refreshData()
+    }
+
+    override fun onNetworkLost() {
+        Toast.makeText(this, "Network connection lost", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun refreshData() {
+        val userId = getUserDetails()[SessionManager.KEY_USER_ID]
+        if (userId != null) {
+            db.collection("Data").document(userId).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        // Update UI with fresh data
+                        // For example, update device list or user information
+                        Toast.makeText(this, "Data refreshed", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "No data found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Error refreshing data: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
         }
     }
 }

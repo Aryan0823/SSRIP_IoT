@@ -8,11 +8,9 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class NameDeviceActivity : AppCompatActivity() {
+class NameDeviceActivity : BaseActivity() {
 
     private lateinit var db: FirebaseFirestore
     private lateinit var userId: String
@@ -26,8 +24,13 @@ class NameDeviceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_name_device)
 
+        initializeViews()
+        setupListeners()
+    }
+
+    private fun initializeViews() {
         db = FirebaseFirestore.getInstance()
-        userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        userId = sessionManager.getUserDetails()[SessionManager.KEY_USER_ID] ?: return
         category = intent.getStringExtra("CATEGORY") ?: return
 
         categoryTextView = findViewById(R.id.categoryTextView)
@@ -35,9 +38,10 @@ class NameDeviceActivity : AppCompatActivity() {
         submitButton = findViewById(R.id.submitButton)
         progressBar = findViewById(R.id.progressBar)
 
-        // Display the selected category
         categoryTextView.text = "Selected Category: $category"
+    }
 
+    private fun setupListeners() {
         submitButton.setOnClickListener {
             val deviceName = deviceNameEditText.text.toString().trim()
             if (deviceName.isNotEmpty()) {
@@ -69,7 +73,7 @@ class NameDeviceActivity : AppCompatActivity() {
         val deviceData = hashMapOf(
             "name" to deviceName,
             "category" to category,
-            "deviceStatus" to "OFF"  // Adding deviceStatus field
+            "deviceStatus" to "OFF"
         )
 
         db.collection("Data").document(userId).collection(category).document(deviceName)
@@ -77,7 +81,6 @@ class NameDeviceActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 hideProgressBar()
                 Toast.makeText(this, "Device added successfully", Toast.LENGTH_SHORT).show()
-                // Passing category and device name to networkActivity
                 val intent = Intent(this, NetworkActivity::class.java).apply {
                     putExtra("CATEGORY", category)
                     putExtra("DEVICE_NAME", deviceName)
@@ -100,5 +103,13 @@ class NameDeviceActivity : AppCompatActivity() {
     private fun hideProgressBar() {
         progressBar.visibility = View.GONE
         submitButton.isEnabled = true
+    }
+
+    override fun onNetworkAvailable() {
+        Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onNetworkLost() {
+        Toast.makeText(this, "Network connection lost", Toast.LENGTH_SHORT).show()
     }
 }

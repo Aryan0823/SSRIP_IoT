@@ -1,4 +1,5 @@
 package com.example.ssrip
+
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -7,26 +8,25 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.widget.Button
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 
-class WifiSwitchActivity : AppCompatActivity() {
-
+class WifiSwitchActivity : BaseActivity() {
     private lateinit var tvCategory: TextView
     private lateinit var tvDeviceName: TextView
     private lateinit var tvSsid: TextView
     private lateinit var tvPassword: TextView
     private lateinit var btnOpenWifiSettings: Button
-
     private lateinit var wifiManager: WifiManager
     private lateinit var connectivityManager: ConnectivityManager
     private lateinit var originalSsid: String
-
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            checkAndRedirect()
+            checkAndKillApp()
         }
     }
 
@@ -45,7 +45,6 @@ class WifiSwitchActivity : AppCompatActivity() {
         tvSsid = findViewById(R.id.tvSsid)
         tvPassword = findViewById(R.id.tvPassword)
         btnOpenWifiSettings = findViewById(R.id.btnOpenWifiSettings)
-
         btnOpenWifiSettings.setOnClickListener {
             startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
         }
@@ -66,17 +65,20 @@ class WifiSwitchActivity : AppCompatActivity() {
         val networkRequest = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
             .build()
-
         connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
     }
 
-    private fun checkAndRedirect() {
+    private fun checkAndKillApp() {
         val currentSsid = wifiManager.connectionInfo.ssid.replace("\"", "")
         if (currentSsid != originalSsid && currentSsid != "<unknown ssid>") {
-            connectivityManager.unregisterNetworkCallback(networkCallback)
-            val intent = Intent(this, DashboardActivity::class.java)
-            startActivity(intent)
-            finish()
+            runOnUiThread {
+                Toast.makeText(this, "WiFi switched. Closing the app.", Toast.LENGTH_LONG).show()
+                // Wait for a moment to show the toast
+                Handler(Looper.getMainLooper()).postDelayed({
+                    // Kill the app
+                    finishAffinity()
+                }, 2000)
+            }
         }
     }
 

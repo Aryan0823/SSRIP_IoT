@@ -2,137 +2,71 @@ package com.example.ssrip
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ProgressBar
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
-class SignUpActivity : AppCompatActivity() {
-
-    private lateinit var firstNameInput: EditText
-    private lateinit var lastNameInput: EditText
-    private lateinit var emailInput: EditText
-    private lateinit var phoneNumberInput: EditText
-    private lateinit var passwordInput: EditText
-    private lateinit var termsCheckbox: MaterialCheckBox
-    private lateinit var signUpButton: Button
-    private lateinit var signInLink: View
-    private lateinit var progressBar: ProgressBar
+class SignUpActivity : BaseActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var firestore: FirebaseFirestore
+    private lateinit var emailEditText: EditText
+    private lateinit var passwordEditText: EditText
+    private lateinit var firstNameEditText: EditText
+    private lateinit var lastNameEditText: EditText
+    private lateinit var phoneEditText: EditText
+    private lateinit var termsCheckBox: CheckBox
+    private lateinit var signupButton: Button
+    private lateinit var progressBar: ProgressBar
+    private lateinit var signInLink: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
 
-        // Initialize Firebase Auth and Firestore
         auth = FirebaseAuth.getInstance()
-        firestore = FirebaseFirestore.getInstance()
-
-        // Initialize views
-        firstNameInput = findViewById(R.id.firstNameInput)
-        lastNameInput = findViewById(R.id.lastNameInput)
-        emailInput = findViewById(R.id.emailInput)
-        phoneNumberInput = findViewById(R.id.phoneNumberInput)
-        passwordInput = findViewById(R.id.passwordInput)
-        termsCheckbox = findViewById(R.id.termsCheckbox)
-        signUpButton = findViewById(R.id.signUpButton)
-        signInLink = findViewById(R.id.signInLink)
+        firstNameEditText = findViewById(R.id.firstNameInput)
+        lastNameEditText = findViewById(R.id.lastNameInput)
+        emailEditText = findViewById(R.id.emailInput)
+        phoneEditText = findViewById(R.id.phoneNumberInput)
+        passwordEditText = findViewById(R.id.passwordInput)
+        termsCheckBox = findViewById(R.id.termsCheckbox)
+        signupButton = findViewById(R.id.signUpButton)
         progressBar = findViewById(R.id.progressBar)
+        signInLink = findViewById(R.id.signInLink)
 
-        signUpButton.setOnClickListener { registerUser() }
-        signInLink.setOnClickListener { navigateToSignIn() }
-    }
+        signupButton.setOnClickListener {
+            val email = emailEditText.text.toString().trim()
+            val password = passwordEditText.text.toString().trim()
+            val firstName = firstNameEditText.text.toString().trim()
+            val lastName = lastNameEditText.text.toString().trim()
+            val phone = phoneEditText.text.toString().trim()
 
-    private fun registerUser() {
-        val firstName = firstNameInput.text.toString().trim()
-        val lastName = lastNameInput.text.toString().trim()
-        val email = emailInput.text.toString().trim()
-        val phoneNumber = phoneNumberInput.text.toString().trim()
-        val password = passwordInput.text.toString().trim()
+            if (email.isEmpty() || password.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || phone.isEmpty()) {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-        if (TextUtils.isEmpty(firstName)) {
-            firstNameInput.error = "First Name is required"
-            return
-        }
+            if (!termsCheckBox.isChecked) {
+                Toast.makeText(this, "Please agree to the terms", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-        if (TextUtils.isEmpty(lastName)) {
-            lastNameInput.error = "Last Name is required"
-            return
-        }
+            progressBar.visibility = ProgressBar.VISIBLE
 
-        if (TextUtils.isEmpty(email)) {
-            emailInput.error = "Email is required"
-            return
-        }
-
-        if (TextUtils.isEmpty(phoneNumber)) {
-            phoneNumberInput.error = "Phone Number is required"
-            return
-        }
-
-        if (TextUtils.isEmpty(password)) {
-            passwordInput.error = "Password is required"
-            return
-        }
-
-        if (!termsCheckbox.isChecked) {
-            Toast.makeText(this, "You must agree to the terms of use", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        showLoading()
-
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
+            auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+                progressBar.visibility = ProgressBar.GONE
                 if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    val uid = user?.uid ?: return@addOnCompleteListener
-
-                    val userMap = hashMapOf(
-                        "firstname" to firstName,
-                        "lastname" to lastName,
-                        "email" to email,
-                        "mobilenumber" to phoneNumber
-                    )
-
-                    firestore.collection("users").document(uid).set(userMap)
-                        .addOnSuccessListener {
-                            hideLoading()
-                            Toast.makeText(this, "User registered successfully", Toast.LENGTH_LONG).show()
-                            navigateToSignIn()
-                        }
-                        .addOnFailureListener {
-                            hideLoading()
-                            Toast.makeText(this, "Failed to register user", Toast.LENGTH_LONG).show()
-                        }
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
                 } else {
-                    hideLoading()
-                    Toast.makeText(this, "Registration failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Sign up failed", Toast.LENGTH_SHORT).show()
                 }
             }
-    }
+        }
 
-    private fun navigateToSignIn() {
-        val intent = Intent(this, SignInActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
-
-    private fun showLoading() {
-        progressBar.visibility = View.VISIBLE
-        signUpButton.isEnabled = false
-    }
-
-    private fun hideLoading() {
-        progressBar.visibility = View.GONE
-        signUpButton.isEnabled = true
+        signInLink.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
     }
 }
