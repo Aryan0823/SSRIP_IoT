@@ -300,7 +300,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/add_circle/baseline_add_circle_24.xml" />
+                                      <entry key="url" value="file:/$USER_HOME$/AppData/Local/Android/Sdk/icons/material/materialicons/password/baseline_password_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -310,9 +310,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="assetSourceType" value="FILE" />
-                            <entry key="outputName" value="ac" />
-                            <entry key="sourceFile" value="$PROJECT_DIR$/app/src/main/res/drawable/AC.svg" />
+                            <entry key="outputName" value="ic_password" />
+                            <entry key="sourceFile" value="C:\Users\chauh\OneDrive\Documents\GitHub\SSRIP\SSRIP_IoT\app\src\main\res\drawable\AC.svg" />
                           </map>
                         </option>
                       </PersistentState>
