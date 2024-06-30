@@ -25,7 +25,7 @@ class AddDeviceCategoryActivity : BaseActivity() {
     }
 
     private fun setupCategoryButtons() {
-        val categories = listOf("AC", "Humidifier", "Light", "Fan", "Main")
+        val categories = listOf("AC", "Humidifier", "Light", "Fan")
         categories.forEach { category ->
             findViewById<Button>(resources.getIdentifier("${category.toLowerCase()}Button", "id", packageName))
                 .setOnClickListener { checkCategoryAndProceed(category) }

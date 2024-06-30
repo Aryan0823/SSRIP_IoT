@@ -60,6 +60,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/humidifierButton"
         android:onClick="onCategorySelected"/>
+    <Button
+        android:id="@+id/fanButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onCategorySelected"
+        android:text="Fan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lightButton" />
 
     <Button
         android:id="@+id/mainButton"
@@ -72,15 +81,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/fanButton" />
 
-    <Button
-        android:id="@+id/fanButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:onClick="onCategorySelected"
-        android:text="Fan"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/lightButton" />
+
 
     <ProgressBar
         android:id="@+id/progressBar"
