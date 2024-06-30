@@ -15,7 +15,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fanButton"
+        app:layout_constraintTop_toBottomOf="@+id/mainButton"
         app:layout_constraintVertical_bias="0.967" />
 
     <TextView
@@ -62,14 +62,25 @@
         android:onClick="onCategorySelected"/>
 
     <Button
+        android:id="@+id/mainButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="onCategorySelected"
+        android:text="OutDoor Main"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fanButton" />
+
+    <Button
         android:id="@+id/fanButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:onClick="onCategorySelected"
         android:text="Fan"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/lightButton"
-        android:onClick="onCategorySelected"/>
+        app:layout_constraintTop_toBottomOf="@id/lightButton" />
 
     <ProgressBar
         android:id="@+id/progressBar"

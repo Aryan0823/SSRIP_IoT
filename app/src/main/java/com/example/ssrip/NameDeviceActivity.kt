@@ -14,6 +14,7 @@ class NameDeviceActivity : BaseActivity() {
 
     private lateinit var db: FirebaseFirestore
     private lateinit var userId: String
+    private lateinit var userEmail: String
     private lateinit var category: String
     private lateinit var categoryTextView: TextView
     private lateinit var deviceNameEditText: EditText
@@ -23,16 +24,16 @@ class NameDeviceActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_name_device)
-
         initializeViews()
         setupListeners()
     }
 
     private fun initializeViews() {
         db = FirebaseFirestore.getInstance()
-        userId = sessionManager.getUserDetails()[SessionManager.KEY_USER_ID] ?: return
+        val userDetails = sessionManager.getUserDetails()
+        userId = userDetails[SessionManager.KEY_USER_ID] ?: return
+        userEmail = userDetails[SessionManager.KEY_EMAIL] ?: return
         category = intent.getStringExtra("CATEGORY") ?: return
-
         categoryTextView = findViewById(R.id.categoryTextView)
         deviceNameEditText = findViewById(R.id.deviceNameEditText)
         submitButton = findViewById(R.id.submitButton)
@@ -85,6 +86,7 @@ class NameDeviceActivity : BaseActivity() {
                     putExtra("CATEGORY", category)
                     putExtra("DEVICE_NAME", deviceName)
                     putExtra("USER_UID", userId)
+                    putExtra("USER_EMAIL", userEmail)
                 }
                 startActivity(intent)
                 finish()

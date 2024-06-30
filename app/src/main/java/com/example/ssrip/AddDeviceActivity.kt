@@ -32,6 +32,7 @@ class AddDeviceActivity : AppCompatActivity() {
     private lateinit var tvCategory: TextView
     private lateinit var tvDeviceName: TextView
     private lateinit var etIpAddress: EditText
+    private lateinit var etuseremail: TextView
 //    private lateinit var btnScanNetworks: Button
 //    private lateinit var tvAvailableNetworks: TextView
     private lateinit var etSsid: EditText
@@ -39,11 +40,11 @@ class AddDeviceActivity : AppCompatActivity() {
     private lateinit var btnSubmit: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var tvStatus: TextView
-
     private lateinit var category: String
     private lateinit var deviceName: String
     private lateinit var userId: String
-
+    private lateinit var userEmail:String
+    private lateinit var userPassword:EditText
     private lateinit var wifiManager: WifiManager
     private lateinit var connectivityManager: ConnectivityManager
     private var currentSSID: String? = null
@@ -59,6 +60,9 @@ class AddDeviceActivity : AppCompatActivity() {
         setInitialData()
         setupListeners()
         initializeWifiManager()
+
+
+        etuseremail.text = "Email: $userEmail"
     }
 
     private fun initializeViews() {
@@ -67,6 +71,8 @@ class AddDeviceActivity : AppCompatActivity() {
         etIpAddress = findViewById(R.id.etIpAddress)
 //        btnScanNetworks = findViewById(R.id.btnScanNetworks)
 //        tvAvailableNetworks = findViewById(R.id.tvAvailableNetworks)
+        etuseremail= findViewById(R.id.etuseremail)
+        userPassword = findViewById(R.id.etuserPassword)
         etSsid = findViewById(R.id.etSsid)
         etPassword = findViewById(R.id.etPassword)
         btnSubmit = findViewById(R.id.btnSubmit)
@@ -89,7 +95,7 @@ class AddDeviceActivity : AppCompatActivity() {
         category = intent.getStringExtra("CATEGORY") ?: ""
         deviceName = intent.getStringExtra("DEVICE_NAME") ?: ""
         userId = intent.getStringExtra("USER_UID") ?: ""
-
+        userEmail = intent.getStringExtra("USER_EMAIL") ?: ""
         tvCategory.text = "Category: $category"
         tvDeviceName.text = "Device Name: $deviceName"
     }
@@ -214,8 +220,8 @@ class AddDeviceActivity : AppCompatActivity() {
         val ipAddress = etIpAddress.text.toString()
         val ssid = etSsid.text.toString()
         val password = etPassword.text.toString()
-
-        if (ipAddress.isEmpty() || ssid.isEmpty() || password.isEmpty()) {
+        val userPassword = userPassword.text.toString()
+        if (ipAddress.isEmpty() || ssid.isEmpty() || password.isEmpty()|| userPassword.isEmpty()) {
             updateStatus("Please fill in all fields")
             return
         }
@@ -225,10 +231,10 @@ class AddDeviceActivity : AppCompatActivity() {
         coroutineScope.launch {
             try {
                 ensureSSRIPConnection()
-                val success = sendCredentialsToESP(ipAddress, ssid, password)
+                val success = sendCredentialsToESP(ipAddress, ssid, password, userPassword)
                 if (success) {
                     updateStatus("Credentials sent successfully")
-                    navigateToWifiSwitchActivity(ssid, password)
+                    navigateToWifiSwitchActivity(ssid, password, userPassword)
                 } else {
                     updateStatus("Failed to send credentials")
                 }
@@ -242,11 +248,11 @@ class AddDeviceActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun sendCredentialsToESP(ipAddress: String, ssid: String, password: String): Boolean = withContext(Dispatchers.IO) {
-        val url = URL("http://$ipAddress/setting?ssid=$ssid&pass=$password&deviceName=$deviceName&category=$category&uid=$userId")
+    private suspend fun sendCredentialsToESP(ipAddress: String, ssid: String, password: String, userPassword: String): Boolean = withContext(Dispatchers.IO) {
+        val url = URL("http://$ipAddress/setting?ssid=$ssid&pass=$password&deviceName=$deviceName&category=$category&uid=$userId&email=$userEmail&userpass=$userPassword")
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
-        connection.connectTimeout = 10000 // 10 seconds timeout
+        connection.connectTimeout = 100000 // 10 minutes timeout
 
         val responseCode = connection.responseCode
         if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -258,12 +264,15 @@ class AddDeviceActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToWifiSwitchActivity(ssid: String, password: String) {
+    private fun navigateToWifiSwitchActivity(ssid: String, password: String, userPassword: String) {
         val intent = Intent(this, WifiSwitchActivity::class.java).apply {
             putExtra("SSID", ssid)
             putExtra("PASSWORD", password)
             putExtra("CATEGORY", category)
             putExtra("DEVICE_NAME", deviceName)
+            putExtra("USER_UID", userId)
+            putExtra("USER_EMAIL", userEmail)
+            putExtra("USER_PASSWORD", userPassword)
         }
         startActivity(intent)
         finish()

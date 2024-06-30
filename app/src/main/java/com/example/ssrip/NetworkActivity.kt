@@ -40,6 +40,7 @@ class NetworkActivity : AppCompatActivity() {
     private lateinit var category: String
     private lateinit var deviceName: String
     private lateinit var userId: String
+    private lateinit var userEmail:String
 
     companion object {
         private const val PERMISSIONS_REQUEST_CODE = 100
@@ -65,6 +66,7 @@ class NetworkActivity : AppCompatActivity() {
         category = intent.getStringExtra("CATEGORY") ?: ""
         deviceName = intent.getStringExtra("DEVICE_NAME") ?: ""
         userId = intent.getStringExtra("USER_UID") ?: ""
+        userEmail = intent.getStringExtra("USER_EMAIL") ?: ""
 
         nextButton.isEnabled = false
     }
@@ -272,6 +274,7 @@ class NetworkActivity : AppCompatActivity() {
             putExtra("CATEGORY", category)
             putExtra("DEVICE_NAME", deviceName)
             putExtra("USER_UID", userId)
+            putExtra("USER_EMAIL", userEmail)
         }
         startActivity(intent)
         finish()
