@@ -32,8 +32,8 @@ class AddDeviceActivity : AppCompatActivity() {
     private lateinit var tvCategory: TextView
     private lateinit var tvDeviceName: TextView
     private lateinit var etIpAddress: EditText
-    private lateinit var btnScanNetworks: Button
-    private lateinit var tvAvailableNetworks: TextView
+//    private lateinit var btnScanNetworks: Button
+//    private lateinit var tvAvailableNetworks: TextView
     private lateinit var etSsid: EditText
     private lateinit var etPassword: EditText
     private lateinit var btnSubmit: Button
@@ -65,8 +65,8 @@ class AddDeviceActivity : AppCompatActivity() {
         tvCategory = findViewById(R.id.tvCategory)
         tvDeviceName = findViewById(R.id.tvDeviceName)
         etIpAddress = findViewById(R.id.etIpAddress)
-        btnScanNetworks = findViewById(R.id.btnScanNetworks)
-        tvAvailableNetworks = findViewById(R.id.tvAvailableNetworks)
+//        btnScanNetworks = findViewById(R.id.btnScanNetworks)
+//        tvAvailableNetworks = findViewById(R.id.tvAvailableNetworks)
         etSsid = findViewById(R.id.etSsid)
         etPassword = findViewById(R.id.etPassword)
         btnSubmit = findViewById(R.id.btnSubmit)
@@ -95,9 +95,9 @@ class AddDeviceActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        btnScanNetworks.setOnClickListener {
-            scanWifiNetworks()
-        }
+//        btnScanNetworks.setOnClickListener {
+//            scanWifiNetworks()
+//        }
 
         btnSubmit.setOnClickListener {
             submitWifiCredentials()
@@ -111,33 +111,33 @@ class AddDeviceActivity : AppCompatActivity() {
         Log.d(TAG, "Current SSID: $currentSSID")
     }
 
-    private fun scanWifiNetworks() {
-        val ipAddress = etIpAddress.text.toString()
-        if (ipAddress.isEmpty()) {
-            updateStatus("Please enter an IP address")
-            return
-        }
-
-        progressBar.visibility = View.VISIBLE
-        updateStatus("Scanning networks...")
-        coroutineScope.launch {
-            try {
-                ensureSSRIPConnection()
-                val networks = performNetworkScan(ipAddress)
-                displayNetworks(networks)
-                updateStatus("Scan complete")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error scanning networks", e)
-                when (e) {
-                    is SocketTimeoutException -> updateStatus("Connection timed out. Please try again.")
-                    else -> updateStatus("Error scanning networks: ${e.message}")
-                }
-                ensureSSRIPConnection() // Try to reconnect to SSRIP
-            } finally {
-                progressBar.visibility = View.GONE
-            }
-        }
-    }
+//    private fun scanWifiNetworks() {
+//        val ipAddress = etIpAddress.text.toString()
+//        if (ipAddress.isEmpty()) {
+//            updateStatus("Please enter an IP address")
+//            return
+//        }
+//
+//        progressBar.visibility = View.VISIBLE
+//        updateStatus("Scanning networks...")
+//        coroutineScope.launch {
+//            try {
+//                ensureSSRIPConnection()
+//                val networks = performNetworkScan(ipAddress)
+//                displayNetworks(networks)
+//                updateStatus("Scan complete")
+//            } catch (e: Exception) {
+//                Log.e(TAG, "Error scanning networks", e)
+//                when (e) {
+//                    is SocketTimeoutException -> updateStatus("Connection timed out. Please try again.")
+//                    else -> updateStatus("Error scanning networks: ${e.message}")
+//                }
+//                ensureSSRIPConnection() // Try to reconnect to SSRIP
+//            } finally {
+//                progressBar.visibility = View.GONE
+//            }
+//        }
+//    }
 
     private suspend fun ensureSSRIPConnection() {
         withContext(Dispatchers.IO) {
@@ -187,28 +187,28 @@ class AddDeviceActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun performNetworkScan(ipAddress: String): List<String> = withContext(Dispatchers.IO) {
-        val url = URL("http://$ipAddress/scan")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.connectTimeout = 10000 // 10 seconds timeout
+//    private suspend fun performNetworkScan(ipAddress: String): List<String> = withContext(Dispatchers.IO) {
+//        val url = URL("http://$ipAddress/scan")
+//        val connection = url.openConnection() as HttpURLConnection
+//        connection.requestMethod = "POST"
+//        connection.connectTimeout = 10000 // 10 seconds timeout
+//
+//        val responseCode = connection.responseCode
+//        if (responseCode == HttpURLConnection.HTTP_OK) {
+//            val response = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
+//            val jsonArray = JSONArray(response)
+//            return@withContext List(jsonArray.length()) { i ->
+//                val network = jsonArray.getJSONObject(i)
+//                "${network.getString("ssid")} (${network.getInt("rssi")} dBm)"
+//            }
+//        } else {
+//            throw Exception("HTTP error code: $responseCode")
+//        }
+//    }
 
-        val responseCode = connection.responseCode
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            val response = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
-            val jsonArray = JSONArray(response)
-            return@withContext List(jsonArray.length()) { i ->
-                val network = jsonArray.getJSONObject(i)
-                "${network.getString("ssid")} (${network.getInt("rssi")} dBm)"
-            }
-        } else {
-            throw Exception("HTTP error code: $responseCode")
-        }
-    }
-
-    private fun displayNetworks(networks: List<String>) {
-        tvAvailableNetworks.text = networks.joinToString("\n")
-    }
+//    private fun displayNetworks(networks: List<String>) {
+//        tvAvailableNetworks.text = networks.joinToString("\n")
+//    }
 
     private fun submitWifiCredentials() {
         val ipAddress = etIpAddress.text.toString()

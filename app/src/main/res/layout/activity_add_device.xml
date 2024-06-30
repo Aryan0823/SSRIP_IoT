@@ -35,36 +35,37 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvDeviceName" />
 
-    <Button
-        android:id="@+id/btnScanNetworks"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Scan WiFi Networks"
-        android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etIpAddress" />
+<!--    <Button-->
+<!--        android:id="@+id/btnScanNetworks"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Scan WiFi Networks"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/etIpAddress" />-->
 
-    <TextView
-        android:id="@+id/tvAvailableNetworks"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Available networks will appear here"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnScanNetworks" />
+<!--    <TextView-->
+<!--        android:id="@+id/tvAvailableNetworks"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        android:text="Available networks will appear here"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/btnScanNetworks" />-->
 
     <EditText
         android:id="@+id/etSsid"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:hint="SSID"
         android:inputType="text"
-        android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvAvailableNetworks" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etIpAddress" />
 
     <EditText
         android:id="@+id/etPassword"

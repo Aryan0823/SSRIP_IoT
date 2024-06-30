@@ -3,22 +3,25 @@ package com.example.ssrip
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 
 class DashboardActivity : BaseActivity() {
-
     private lateinit var logoutButton: Button
     private lateinit var welcomeTextView: TextView
-    private lateinit var userIdTextView: TextView
-    private lateinit var addDeviceButton: Button
+    private lateinit var addDeviceButton: FloatingActionButton
+    private lateinit var btnAC: ImageButton
+    private lateinit var btnFan: ImageButton
+    private lateinit var btnHumidifier: ImageButton
+    private lateinit var btnLight: ImageButton
     private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
-
         initializeViews()
         setupListeners()
         displayUserInfo()
@@ -28,28 +31,47 @@ class DashboardActivity : BaseActivity() {
     private fun initializeViews() {
         logoutButton = findViewById(R.id.btnSignOut)
         welcomeTextView = findViewById(R.id.tvWelcome)
-        userIdTextView = findViewById(R.id.tvUserId)
         addDeviceButton = findViewById(R.id.btnAddDevice)
+        btnAC = findViewById(R.id.btnAC)
+        btnFan = findViewById(R.id.btnFan)
+        btnHumidifier = findViewById(R.id.btnHumidifier)
+        btnLight = findViewById(R.id.btnLight)
     }
 
     private fun setupListeners() {
-        logoutButton.setOnClickListener {
-            logout()
-        }
-
+        logoutButton.setOnClickListener { logout() }
         addDeviceButton.setOnClickListener {
-            val intent = Intent(this, AddDeviceCategoryActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, AddDeviceCategoryActivity::class.java))
         }
+        btnAC.setOnClickListener { openCategoryDevices("AC") }
+        btnFan.setOnClickListener { openCategoryDevices("Fan") }
+        btnHumidifier.setOnClickListener { openCategoryDevices("Humidifier") }
+        btnLight.setOnClickListener { openCategoryDevices("Light") }
     }
 
     private fun displayUserInfo() {
         val userDetails = getUserDetails()
-        val userId = userDetails[SessionManager.KEY_USER_ID]
         val email = userDetails[SessionManager.KEY_EMAIL]
-
         welcomeTextView.text = "Welcome, $email"
-        userIdTextView.text = "User ID: $userId"
+    }
+
+    private fun openCategoryDevices(category: String) {
+        val userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: return
+        db.collection("Data").document(userId).collection(category).get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    Toast.makeText(this, "No devices found in $category", Toast.LENGTH_SHORT).show()
+                } else {
+                    val intent = Intent(this, CategoryDevicesActivity::class.java).apply {
+                        putExtra("CATEGORY", category)
+                        putStringArrayListExtra("DEVICES", ArrayList(documents.map { it.id }))
+                    }
+                    startActivity(intent)
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     override fun onResume() {
@@ -72,8 +94,6 @@ class DashboardActivity : BaseActivity() {
             db.collection("Data").document(userId).get()
                 .addOnSuccessListener { document ->
                     if (document != null && document.exists()) {
-                        // Update UI with fresh data
-                        // For example, update device list or user information
                         Toast.makeText(this, "Data refreshed", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(this, "No data found", Toast.LENGTH_SHORT).show()
