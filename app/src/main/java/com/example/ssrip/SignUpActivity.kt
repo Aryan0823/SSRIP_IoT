@@ -14,7 +14,7 @@ class SignUpActivity : BaseActivity() {
     private lateinit var firstNameEditText: EditText
     private lateinit var lastNameEditText: EditText
     private lateinit var phoneEditText: EditText
-    private lateinit var termsCheckBox: CheckBox
+
     private lateinit var signupButton: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var signInLink: TextView
@@ -29,7 +29,7 @@ class SignUpActivity : BaseActivity() {
         emailEditText = findViewById(R.id.emailInput)
         phoneEditText = findViewById(R.id.phoneNumberInput)
         passwordEditText = findViewById(R.id.passwordInput)
-        termsCheckBox = findViewById(R.id.termsCheckbox)
+
         signupButton = findViewById(R.id.signUpButton)
         progressBar = findViewById(R.id.progressBar)
         signInLink = findViewById(R.id.signInLink)
@@ -43,11 +43,6 @@ class SignUpActivity : BaseActivity() {
 
             if (email.isEmpty() || password.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || phone.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (!termsCheckBox.isChecked) {
-                Toast.makeText(this, "Please agree to the terms", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
