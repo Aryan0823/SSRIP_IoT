@@ -1,10 +1,10 @@
 package com.example.ssrip
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -32,27 +32,15 @@ class CategoryDevicesActivity : BaseActivity() {
 
         lvDevices.setOnItemClickListener { _, _, position, _ ->
             val deviceName = devices[position]
-            toggleDeviceStatus(category, deviceName)
+            openDeviceDetailActivity(category, deviceName)
         }
     }
 
-    private fun toggleDeviceStatus(category: String, deviceName: String) {
-        val userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: return
-        val deviceRef = db.collection("Data").document(userId)
-            .collection(category).document(deviceName)
-
-        deviceRef.get().addOnSuccessListener { document ->
-            val currentStatus = document.getString("status") ?: "off"
-            val newStatus = if (currentStatus == "on") "off" else "on"
-
-            deviceRef.update("status", newStatus)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Device status updated", Toast.LENGTH_SHORT).show()
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this, "Error updating status: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+    private fun openDeviceDetailActivity(category: String, deviceName: String) {
+        val intent = Intent(this, DeviceDetailActivity::class.java).apply {
+            putExtra("CATEGORY", category)
+            putExtra("DEVICE_NAME", deviceName)
         }
+        startActivity(intent)
     }
-
 }
