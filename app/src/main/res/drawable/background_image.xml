@@ -1,0 +1,4 @@
+<!-- Replace with your actual image file in the drawable folder -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/home"
+    android:tileMode="disabled" />

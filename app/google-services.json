@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "180311183138",
+    "project_id": "interactive-iot-devices-ssrip",
+    "storage_bucket": "interactive-iot-devices-ssrip.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:180311183138:android:9d5b39aa5e96783bd8df7b",
+        "android_client_info": {
+          "package_name": "com.example.ssrip"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "180311183138-2vct4jis1c1rvl15b046a2coso78bm00.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtVnJLGR1Il-BldRE_-wLeCZllt1nimz0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "180311183138-2vct4jis1c1rvl15b046a2coso78bm00.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
