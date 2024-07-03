@@ -33,7 +33,4 @@ class CategoryDevicesActivity : BaseActivity() {
             val deviceName = devices[position]
         }
     }
-
-        }
-    }
 }
