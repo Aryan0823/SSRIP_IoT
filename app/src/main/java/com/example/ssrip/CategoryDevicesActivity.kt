@@ -1,6 +1,5 @@
 package com.example.ssrip
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.ListView
@@ -32,15 +31,9 @@ class CategoryDevicesActivity : BaseActivity() {
 
         lvDevices.setOnItemClickListener { _, _, position, _ ->
             val deviceName = devices[position]
-            openDeviceDetailActivity(category, deviceName)
         }
     }
 
-    private fun openDeviceDetailActivity(category: String, deviceName: String) {
-        val intent = Intent(this, DeviceDetailActivity::class.java).apply {
-            putExtra("CATEGORY", category)
-            putExtra("DEVICE_NAME", deviceName)
         }
-        startActivity(intent)
     }
 }
