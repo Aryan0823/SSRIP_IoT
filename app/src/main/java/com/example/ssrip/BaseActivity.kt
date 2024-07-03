@@ -21,7 +21,6 @@ open class BaseActivity : AppCompatActivity() {
 
         if (!sessionManager.checkLogin() && this !is MainActivity && this !is LoginActivity
             && this !is SignUpActivity && this !is DashboardActivity
-            && this !is WifiSwitchActivity && this !is CategoryDevicesActivity
         ) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
