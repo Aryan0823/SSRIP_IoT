@@ -71,13 +71,47 @@ class NameDeviceActivity : BaseActivity() {
     }
 
     private fun createDevice(deviceName: String) {
-        val deviceData = hashMapOf(
-            "name" to deviceName,
-            "category" to category,
-            "deviceStatus" to "OFF"
-        )
+        val deviceData = when (category) {
+            "AC" -> hashMapOf(
+                "deviceName" to deviceName,
+                "deviceStatus" to "OFF",
+                "roomTemperature" to 0,
+                "setTemperature" to 0
+            )
+            "Fan" -> hashMapOf(
+                "deviceName" to deviceName,
+                "deviceStatus" to "OFF",
+                "roomTemperature" to 0,
+                "setFanSpeed" to 0
+            )
+            "Light" -> hashMapOf(
+                "deviceName" to deviceName,
+                "deviceStatus" to "OFF",
+                "roomLight" to 0,
+                "setBrightness" to 0
+            )
+            "Humidifier" -> hashMapOf(
+                "deviceName" to deviceName,
+                "deviceStatus" to "OFF",
+                "roomHumidity" to 0,
+                "setHumidity" to 0
+            )
+            "OutDoor Device" -> hashMapOf(
+                "deviceName" to deviceName,
+                "timestamp" to "",
+                "temperature" to 0,
+                "humidity" to 0,
+                "light" to 0
+            )
+            else -> hashMapOf(
+                "deviceName" to deviceName,
+                "deviceStatus" to "OFF"
+            )
+        }
 
-        db.collection("Data").document(userId).collection(category).document(deviceName)
+        val collectionName = if (category == "OutDoor Device") "OutdoorSensors" else category
+
+        db.collection("Data").document(userId).collection(collectionName).document(deviceName)
             .set(deviceData)
             .addOnSuccessListener {
                 hideProgressBar()
