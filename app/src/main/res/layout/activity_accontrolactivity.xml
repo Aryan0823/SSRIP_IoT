@@ -1,0 +1,149 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E0F7FA"
+    android:padding="16dp">
+
+    <!-- Thermostat Circle -->
+    <RelativeLayout
+        android:id="@+id/thermostat_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp">
+
+        <!-- Outer Circle -->
+        <RelativeLayout
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:background="@drawable/thermostat_outer_background"
+            android:layout_centerInParent="true">
+
+            <!-- Inner Circle -->
+            <RelativeLayout
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/thermostat_inner_background">
+
+                <!-- Temperature and Status -->
+                <TextView
+                    android:id="@+id/temperature"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="22°"
+                    android:textColor="#2196F3"
+                    android:textSize="48sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_above="@id/temperature"
+                    android:text="COOLING"
+                    android:textColor="#B0BEC5"
+                    android:textSize="18sp" />
+            </RelativeLayout>
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <!-- Device Selector and On/Off Switch -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/thermostat_container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/rounded_corners_background"
+        android:padding="16dp">
+
+        <Spinner
+            android:id="@+id/device_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/device_names"
+            android:layout_marginRight="24dp" />
+
+        <Switch
+            android:id="@+id/switch_on_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Switch on" />
+    </LinearLayout>
+
+    <!-- Conditioner Mode Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/device_selector"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/rounded_corners_background"
+        android:padding="16dp">
+
+        <Button
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/mode_background"
+            android:text="" />
+
+        <Button
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/mode_background"
+            android:text="" />
+
+        <Button
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/mode_background"
+            android:text="" />
+
+        <Button
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/mode_background"
+            android:text="" />
+    </LinearLayout>
+
+    <!-- Auto Adjustment Switch and Text -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/conditioner_modes"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/rounded_corners_background"
+        android:padding="16dp">
+
+        <Switch
+            android:id="@+id/auto_adjustment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Auto Adjustment"
+            android:checked="true"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/auto_adjustment"
+            android:layout_centerHorizontal="true"
+            android:text="It will save energy and money"
+            android:textColor="#B0BEC5"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp" />
+    </RelativeLayout>
+
+</RelativeLayout>
