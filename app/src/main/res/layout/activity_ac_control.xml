@@ -166,11 +166,13 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/materialCardView2"
                 app:layout_constraintTop_toTopOf="parent">
-
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="8dp">
+                    android:layout_width="115dp"
+                    android:layout_height="67dp"
+                    android:padding="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/materialCardView3">
 
                     <TextView
                         android:id="@+id/powerconsuption"
@@ -185,6 +187,8 @@
                         app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
+
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

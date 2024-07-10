@@ -51,30 +51,33 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.card.MaterialCardView
-        android:layout_width="360dp"
-        android:layout_height="70dp"
-        app:layout_constraintBottom_toTopOf="@+id/switch3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/devicenameTextView">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="5dp">
+            android:layout_height="wrap_content"
+            android:padding="8dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/materialCardView1"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/materialCardView2"
+                app:layout_constraintHorizontal_chainStyle="spread"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="5dp">
+                    android:layout_height="wrap_content"
+                    android:padding="8dp">
 
                     <TextView
                         android:id="@+id/roomTempValue"
@@ -87,12 +90,11 @@
 
                     <TextView
                         android:id="@+id/roomTemperature"
-                        android:layout_width="95dp"
-                        android:layout_height="35dp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
                         android:text="Room Temperature"
                         android:textAlignment="center"
-                        android:textSize="12.5dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:textSize="12.5sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/roomTempValue" />
@@ -101,17 +103,18 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/materialCardView2"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toStartOf="@+id/materialCardView3"
                 app:layout_constraintStart_toEndOf="@+id/materialCardView1"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="5dp">
+                    android:layout_height="wrap_content"
+                    android:padding="8dp">
 
                     <TextView
                         android:id="@+id/outsideTempValue"
@@ -124,12 +127,11 @@
 
                     <TextView
                         android:id="@+id/outdoorTemperature"
-                        android:layout_width="95dp"
-                        android:layout_height="35dp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
                         android:text="Outdoor Temperature"
                         android:textAlignment="center"
-                        android:textSize="12.5dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:textSize="12.5sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/outsideTempValue" />
@@ -138,33 +140,34 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/materialCardView3"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.631"
                 app:layout_constraintStart_toEndOf="@+id/materialCardView2"
                 app:layout_constraintTop_toTopOf="parent">
-
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="5dp">
+                    android:layout_width="115dp"
+                    android:layout_height="67dp"
+                    android:padding="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/materialCardView3">
 
                     <TextView
                         android:id="@+id/powerconsuption"
-                        android:layout_width="95dp"
-                        android:layout_height="35dp"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
                         android:text="Check Power"
                         android:textAlignment="center"
-                        android:textSize="12.5dp"
+                        android:textSize="12.5sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
+
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
