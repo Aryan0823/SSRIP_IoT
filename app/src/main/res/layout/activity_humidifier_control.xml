@@ -167,6 +167,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 app:layout_constraintEnd_toEndOf="parent"
+                android:clickable="true"
                 app:layout_constraintStart_toEndOf="@+id/materialCardView2"
                 app:layout_constraintTop_toTopOf="parent">
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -181,7 +182,7 @@
                         android:id="@+id/powerconsuption"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Check Power"
+                        android:text="Check Power Consumption"
                         android:textAlignment="center"
                         android:textSize="12.5sp"
                         app:layout_constraintBottom_toBottomOf="parent"
