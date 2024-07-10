@@ -25,9 +25,13 @@ class AddDeviceCategoryActivity : BaseActivity() {
     }
 
     private fun setupCategoryButtons() {
-        val categories = listOf("AC", "Humidifier", "Light", "Fan")
+        val categories = listOf("AC", "Humidifier", "Light", "Fan", "OutDoor Device")
         categories.forEach { category ->
-            findViewById<Button>(resources.getIdentifier("${category.toLowerCase()}Button", "id", packageName))
+            val buttonId = when (category) {
+                "OutDoor Device" -> "mainButton"
+                else -> "${category.toLowerCase()}Button"
+            }
+            findViewById<Button>(resources.getIdentifier(buttonId, "id", packageName))
                 .setOnClickListener { checkCategoryAndProceed(category) }
         }
     }
@@ -61,12 +65,13 @@ class AddDeviceCategoryActivity : BaseActivity() {
     }
 
     private fun createCategoryAndProceed(category: String, userDocRef: DocumentReference) {
-        userDocRef.collection(category).get()
+        val collectionName = if (category == "OutDoor Device") "OutdoorSensors" else category
+        userDocRef.collection(collectionName).get()
             .addOnSuccessListener { querySnapshot ->
                 if (querySnapshot.isEmpty) {
-                    userDocRef.collection(category)
+                    userDocRef.collection(collectionName)
                         .document("placeholder")
-                        .set(mapOf("placeholder" to true))
+                        .set(mapOf("placeholder" to false))
                         .addOnSuccessListener {
                             hideProgressBar()
                             startNameDeviceActivity(category)
