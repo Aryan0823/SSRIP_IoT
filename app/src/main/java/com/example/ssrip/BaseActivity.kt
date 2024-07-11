@@ -20,7 +20,9 @@ open class BaseActivity : AppCompatActivity() {
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
         if (!sessionManager.checkLogin() && this !is MainActivity && this !is LoginActivity
-            && this !is SignUpActivity && this !is DashboardActivity
+            && this !is SignUpActivity && this !is DashboardActivity && this !is AddDeviceCategoryActivity
+             && this !is FanControlActivity && this !is HumidifierControlActivity && this !is LightControlActivity
+            && this !is NameDeviceActivity && this !is WifiSwitchActivity
         ) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()

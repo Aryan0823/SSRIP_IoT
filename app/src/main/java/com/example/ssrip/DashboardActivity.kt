@@ -54,10 +54,10 @@ class DashboardActivity : BaseActivity() {
         addDeviceButton.setOnClickListener {
             startActivity(Intent(this, AddDeviceCategoryActivity::class.java))
         }
-        btnAC.setOnClickListener { openCategoryDevices("AC") }
-        btnFan.setOnClickListener { openCategoryDevices("Fan") }
-        btnHumidifier.setOnClickListener { openCategoryDevices("Humidifier") }
-        btnLight.setOnClickListener { openCategoryDevices("Light") }
+        btnAC.setOnClickListener { openControlActivity("AC") }
+        btnFan.setOnClickListener { openControlActivity("Fan") }
+        btnHumidifier.setOnClickListener { openControlActivity("Humidifier") }
+        btnLight.setOnClickListener { openControlActivity("Light") }
 
         spinnerOutdoorDevices.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
@@ -90,6 +90,7 @@ class DashboardActivity : BaseActivity() {
                 Toast.makeText(this, "Error fetching devices: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
     private fun updateSpinner() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, deviceList)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -101,6 +102,7 @@ class DashboardActivity : BaseActivity() {
             displayNoSensorMessage()
         }
     }
+
     private fun displayNoSensorMessage() {
         tvOutdoorTemperature.text = "Temperature: No data"
         tvOutdoorHumidity.text = "Humidity: No data"
@@ -147,23 +149,19 @@ class DashboardActivity : BaseActivity() {
         }
     }
 
-    private fun openCategoryDevices(category: String) {
-        val userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: return
-        db.collection("Data").document(userId).collection(category).get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    Toast.makeText(this, "No devices found in $category", Toast.LENGTH_SHORT).show()
-                } else {
-                    val intent = Intent(this, CategoryDevicesActivity::class.java).apply {
-                        putExtra("CATEGORY", category)
-                        putStringArrayListExtra("DEVICES", ArrayList(documents.map { it.id }))
-                    }
-                    startActivity(intent)
-                }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+    private fun openControlActivity(category: String) {
+        val intent = when (category) {
+            "AC" -> Intent(this, AcControlActivity::class.java)
+            "Fan" -> Intent(this, FanControlActivity::class.java)
+            "Light" -> Intent(this, LightControlActivity::class.java)
+            "Humidifier" -> Intent(this, HumidifierControlActivity::class.java)
+            else -> return // If the category doesn't match, we don't redirect
+        }
+
+        // Pass category to the next activity
+        intent.putExtra("CATEGORY", category)
+
+        startActivity(intent)
     }
 
     override fun onResume() {
