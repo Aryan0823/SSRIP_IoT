@@ -1,6 +1,7 @@
 package com.example.ssrip
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,6 +32,7 @@ class FanControlActivity : BaseActivity() {
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchFanDevices()
+            fetchOutsideTemperature() // Add this line to fetch and display the outside temperature
         } else {
             Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show()
         }
@@ -163,9 +165,29 @@ class FanControlActivity : BaseActivity() {
             }
     }
 
+    private fun fetchOutsideTemperature() {
+        val outdoorRef = db.collection("Data").document(userId)
+            .collection("OutdoorSensors").document("outdoor")
+
+        outdoorRef.addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.w("FanControlActivity", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                val temperature = snapshot.getDouble("temperature") ?: Double.NaN
+                outsideTempValue.text = if (temperature.isNaN()) "-- °C" else "$temperature °C"
+            } else {
+                Log.d("FanControlActivity", "Current data: null")
+            }
+        }
+    }
+
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchFanDevices()
+        fetchOutsideTemperature() // Fetch outside temperature when network is available
     }
 
     override fun onNetworkLost() {
@@ -181,6 +203,7 @@ class FanControlActivity : BaseActivity() {
         super.onResume()
         if (userId.isNotEmpty()) {
             fetchFanDevices()
+            fetchOutsideTemperature() // Fetch outside temperature when resuming the activity
         }
     }
 }

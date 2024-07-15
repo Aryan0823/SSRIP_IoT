@@ -47,7 +47,7 @@
                     android:padding="8dp">
 
                     <TextView
-                        android:id="@+id/roomTempValue"
+                        android:id="@+id/roomLightValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="20"
@@ -59,12 +59,12 @@
                         android:id="@+id/roomTemperature"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Room Temperature"
+                        android:text="Room Light"
                         android:textAlignment="center"
                         android:textSize="12.5sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/roomTempValue" />
+                        app:layout_constraintTop_toBottomOf="@+id/roomLightValue" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -84,7 +84,7 @@
                     android:padding="8dp">
 
                     <TextView
-                        android:id="@+id/outsideTempValue"
+                        android:id="@+id/outsideLightValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="30"
@@ -96,12 +96,12 @@
                         android:id="@+id/outdoorTemperature"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Outdoor Temperature"
+                        android:text="Outdoor Light"
                         android:textAlignment="center"
                         android:textSize="12.5sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/outsideTempValue" />
+                        app:layout_constraintTop_toBottomOf="@+id/outsideLightValue" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 

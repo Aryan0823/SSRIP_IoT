@@ -1,6 +1,7 @@
 package com.example.ssrip
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -13,9 +14,10 @@ class HumidifierControlActivity : BaseActivity() {
     private lateinit var setHumidityTextView: TextView
     private lateinit var decreaseHumidity: FloatingActionButton
     private lateinit var increaseHumidity: FloatingActionButton
-    private lateinit var roomTempValue: TextView
-    private lateinit var outsideTempValue: TextView
+    private lateinit var roomHumValue: TextView
+
     private lateinit var powerConsumption: TextView
+    private lateinit var outsideHumValue: TextView
 
     private lateinit var db: FirebaseFirestore
     private lateinit var userId: String
@@ -33,6 +35,7 @@ class HumidifierControlActivity : BaseActivity() {
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchHumidifierDevices()
+            fetchOutsideHumidity() // Add this line to fetch and display the outside humidity
         } else {
             Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show()
         }
@@ -44,9 +47,10 @@ class HumidifierControlActivity : BaseActivity() {
         setHumidityTextView = findViewById(R.id.textView3)
         decreaseHumidity = findViewById(R.id.floatingActionButton2)
         increaseHumidity = findViewById(R.id.floatingActionButton3)
-        roomTempValue = findViewById(R.id.roomTempValue)
-        outsideTempValue = findViewById(R.id.outsideTempValue)
+        roomHumValue = findViewById(R.id.roomHumValue)
+
         powerConsumption = findViewById(R.id.powerconsuption)
+        outsideHumValue = findViewById(R.id.outsideHumValue)
     }
 
     private fun setupListeners() {
@@ -123,9 +127,8 @@ class HumidifierControlActivity : BaseActivity() {
         data?.let {
             setHumidityTextView.text = "${it["setHumidity"]} %"
             powerSwitch.isChecked = it["deviceStatus"] as? String == "ON"
-            roomTempValue.text = "${it["roomHumidity"]} %"
-            // Note: outdoorTemperature is not in the provided structure, so we'll leave it out
-            outsideTempValue.text = "-- °C"
+            roomHumValue.text = "${it["roomHumidity"]} %"
+
             powerConsumption.text = "Check power Consumption"
         }
     }
@@ -133,8 +136,9 @@ class HumidifierControlActivity : BaseActivity() {
     private fun displayNoDeviceMessage() {
         setHumidityTextView.text = "-- %"
         powerSwitch.isChecked = false
-        roomTempValue.text = "-- %"
-        outsideTempValue.text = "-- °C"
+        roomHumValue.text = "-- %"
+
+        outsideHumValue.text = "-- %"
         powerConsumption.text = "Check power Consumption"
         Toast.makeText(this, "No humidifier device data available", Toast.LENGTH_SHORT).show()
     }
@@ -163,9 +167,29 @@ class HumidifierControlActivity : BaseActivity() {
             }
     }
 
+    private fun fetchOutsideHumidity() {
+        val outdoorRef = db.collection("Data").document(userId)
+            .collection("OutdoorSensors").document("outdoor")
+
+        outdoorRef.addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.w("HumidifierControlActivity", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                val humidity = snapshot.getDouble("humidity") ?: Double.NaN
+                outsideHumValue.text = if (humidity.isNaN()) "-- %" else "$humidity %"
+            } else {
+                Log.d("HumidifierControlActivity", "Current data: null")
+            }
+        }
+    }
+
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchHumidifierDevices()
+        fetchOutsideHumidity() // Fetch outside humidity when network is available
     }
 
     override fun onNetworkLost() {
@@ -181,6 +205,7 @@ class HumidifierControlActivity : BaseActivity() {
         super.onResume()
         if (userId.isNotEmpty()) {
             fetchHumidifierDevices()
+            fetchOutsideHumidity() // Fetch outside humidity when resuming the activity
         }
     }
 }

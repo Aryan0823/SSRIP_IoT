@@ -11,6 +11,8 @@ import androidx.appcompat.app.AlertDialog
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
+import androidx.appcompat.app.AppCompatActivity
+
 class AcControlActivity : BaseActivity() {
     private lateinit var deviceSelector: Spinner
     private lateinit var powerSwitch: Switch
@@ -39,6 +41,7 @@ class AcControlActivity : BaseActivity() {
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchAcDevices()
+            fetchOutsideTemperature() // Add this line to fetch and display the outside temperature
         } else {
             Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show()
         }
@@ -178,6 +181,7 @@ class AcControlActivity : BaseActivity() {
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
     private fun showConfirmationDialog(deviceName: String) {
         AlertDialog.Builder(this)
             .setTitle("Confirm AC Operation")
@@ -190,6 +194,7 @@ class AcControlActivity : BaseActivity() {
             }
             .show()
     }
+
     private fun confirmAcToggle(deviceName: String, confirm: Boolean) {
         val data = hashMapOf(
             "userId" to userId,
@@ -227,9 +232,29 @@ class AcControlActivity : BaseActivity() {
             }
     }
 
+    private fun fetchOutsideTemperature() {
+        val outdoorRef = db.collection("Data").document(userId)
+            .collection("OutdoorSensors").document("outdoor")
+
+        outdoorRef.addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.w("AcControlActivity", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                val temperature = snapshot.getDouble("temperature") ?: Double.NaN
+                outsideTempValue.text = if (temperature.isNaN()) "-- °C" else "$temperature °C"
+            } else {
+                Log.d("AcControlActivity", "Current data: null")
+            }
+        }
+    }
+
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchAcDevices()
+        fetchOutsideTemperature() // Fetch outside temperature when network is available
     }
 
     override fun onNetworkLost() {
@@ -245,6 +270,7 @@ class AcControlActivity : BaseActivity() {
         super.onResume()
         if (userId.isNotEmpty()) {
             fetchAcDevices()
+            fetchOutsideTemperature() // Fetch outside temperature when resuming the activity
         }
     }
 }

@@ -2,7 +2,6 @@ package com.example.ssrip
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -20,10 +19,8 @@ class DashboardActivity : BaseActivity() {
     private lateinit var tvOutdoorTemperature: TextView
     private lateinit var tvOutdoorHumidity: TextView
     private lateinit var tvOutdoorLight: TextView
-    private lateinit var spinnerOutdoorDevices: Spinner
     private lateinit var db: FirebaseFirestore
     private var outdoorSensorListener: ListenerRegistration? = null
-    private var deviceList: MutableList<String> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +29,7 @@ class DashboardActivity : BaseActivity() {
         setupListeners()
         displayUserInfo()
         db = FirebaseFirestore.getInstance()
-        fetchOutdoorDevices()
+        setupOutdoorSensorListener()
     }
 
     private fun initializeViews() {
@@ -46,7 +43,6 @@ class DashboardActivity : BaseActivity() {
         tvOutdoorTemperature = findViewById(R.id.tvOutdoorTemperature)
         tvOutdoorHumidity = findViewById(R.id.tvOutdoorHumidity)
         tvOutdoorLight = findViewById(R.id.tvOutdoorLight)
-        spinnerOutdoorDevices = findViewById(R.id.spinnerOutdoorDevices)
     }
 
     private fun setupListeners() {
@@ -58,15 +54,6 @@ class DashboardActivity : BaseActivity() {
         btnFan.setOnClickListener { openControlActivity("Fan") }
         btnHumidifier.setOnClickListener { openControlActivity("Humidifier") }
         btnLight.setOnClickListener { openControlActivity("Light") }
-
-        spinnerOutdoorDevices.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                val selectedDevice = parent.getItemAtPosition(position) as String
-                setupOutdoorSensorListener(selectedDevice)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
     }
 
     private fun displayUserInfo() {
@@ -75,57 +62,10 @@ class DashboardActivity : BaseActivity() {
         welcomeTextView.text = "Welcome, $email"
     }
 
-    private fun fetchOutdoorDevices() {
-        val userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: return
-        db.collection("Data").document(userId).collection("OutdoorSensors")
-            .get()
-            .addOnSuccessListener { documents ->
-                deviceList.clear()
-                for (document in documents) {
-                    deviceList.add(document.id)
-                }
-                updateSpinner()
-            }
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "Error fetching devices: ${exception.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun updateSpinner() {
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, deviceList)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerOutdoorDevices.adapter = adapter
-
-        if (deviceList.isNotEmpty()) {
-            setupOutdoorSensorListener(deviceList[0])
-        } else {
-            displayNoSensorMessage()
-        }
-    }
-
-    private fun displayNoSensorMessage() {
-        tvOutdoorTemperature.text = "Temperature: No data"
-        tvOutdoorHumidity.text = "Humidity: No data"
-        tvOutdoorLight.text = "Light: No data"
-    }
-
-    private fun showCreateOutdoorDeviceDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Outdoor Device Not Found")
-            .setMessage("Would you like to create an outdoor device?")
-            .setPositiveButton("Yes") { _, _ ->
-                startActivity(Intent(this, AddDeviceCategoryActivity::class.java))
-            }
-            .setNegativeButton("No", null)
-            .show()
-    }
-
-    private fun setupOutdoorSensorListener(deviceName: String) {
-        outdoorSensorListener?.remove()
-
+    private fun setupOutdoorSensorListener() {
         val userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: return
         val deviceRef = db.collection("Data").document(userId)
-            .collection("OutdoorSensors").document(deviceName)
+            .collection("OutdoorSensors").document("outdoor")
 
         outdoorSensorListener = deviceRef.addSnapshotListener { snapshot, e ->
             if (e != null) {
@@ -142,11 +82,29 @@ class DashboardActivity : BaseActivity() {
                 tvOutdoorHumidity.text = "Humidity: ${humidity?.toInt()}%"
                 tvOutdoorLight.text = "Light: ${light?.toInt()} lux"
 
-                Toast.makeText(this, "Outdoor data updated for $deviceName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Outdoor data updated", Toast.LENGTH_SHORT).show()
             } else {
                 displayNoSensorMessage()
+                showCreateOutdoorDeviceDialog()
             }
         }
+    }
+
+    private fun displayNoSensorMessage() {
+        tvOutdoorTemperature.text = "Temperature: --"
+        tvOutdoorHumidity.text = "Humidity: --"
+        tvOutdoorLight.text = "Light: --"
+    }
+
+    private fun showCreateOutdoorDeviceDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Outdoor Device Not Found")
+            .setMessage("Would you like to create an outdoor device?")
+            .setPositiveButton("Yes") { _, _ ->
+                startActivity(Intent(this, AddDeviceCategoryActivity::class.java))
+            }
+            .setNegativeButton("No", null)
+            .show()
     }
 
     private fun openControlActivity(category: String) {
@@ -166,7 +124,7 @@ class DashboardActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshData()
+        setupOutdoorSensorListener()
     }
 
     override fun onPause() {
@@ -176,17 +134,10 @@ class DashboardActivity : BaseActivity() {
 
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
-        refreshData()
+        setupOutdoorSensorListener()
     }
 
     override fun onNetworkLost() {
         Toast.makeText(this, "Network connection lost", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun refreshData() {
-        val userId = getUserDetails()[SessionManager.KEY_USER_ID]
-        if (userId != null) {
-            fetchOutdoorDevices()
-        }
     }
 }

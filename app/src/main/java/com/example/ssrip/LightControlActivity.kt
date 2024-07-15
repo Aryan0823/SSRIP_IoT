@@ -1,6 +1,7 @@
 package com.example.ssrip
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import com.google.firebase.firestore.FirebaseFirestore
@@ -11,9 +12,9 @@ class LightControlActivity : BaseActivity() {
     private lateinit var powerSwitch: Switch
     private lateinit var brightnessSeekBar: SeekBar
     private lateinit var brightnessTextView: TextView
-    private lateinit var roomTempValue: TextView
-    private lateinit var outsideTempValue: TextView
+    private lateinit var roomLightValue: TextView
     private lateinit var powerConsumption: TextView
+    private lateinit var outsideLightValue: TextView
 
     private lateinit var db: FirebaseFirestore
     private lateinit var userId: String
@@ -31,6 +32,7 @@ class LightControlActivity : BaseActivity() {
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchLightDevices()
+            fetchOutsideLight() // Add this line to fetch and display the outside light
         } else {
             Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show()
         }
@@ -41,9 +43,9 @@ class LightControlActivity : BaseActivity() {
         powerSwitch = findViewById(R.id.switch3)
         brightnessSeekBar = findViewById(R.id.seekBar)
         brightnessTextView = findViewById(R.id.textView3)
-        roomTempValue = findViewById(R.id.roomTempValue)
-        outsideTempValue = findViewById(R.id.outsideTempValue)
+        roomLightValue = findViewById(R.id.roomLightValue)
         powerConsumption = findViewById(R.id.powerconsuption)
+        outsideLightValue = findViewById(R.id.outsideLightValue)
 
         brightnessSeekBar.max = 100 // Set max brightness to 100%
     }
@@ -124,19 +126,17 @@ class LightControlActivity : BaseActivity() {
     private fun updateUIWithDeviceData(data: Map<String, Any>?) {
         data?.let {
             powerSwitch.isChecked = (it["deviceStatus"] as? String == "ON")
-            roomTempValue.text = "${it["roomLight"]} lux"
+            roomLightValue.text = "${it["roomLight"]} lux"
             brightnessSeekBar.progress = (it["setBrightness"] as? Long)?.toInt() ?: 0
             brightnessTextView.text = "${brightnessSeekBar.progress} %"
-            // Note: outdoorTemperature is not in the provided structure, so we'll leave it out
-            outsideTempValue.text = "-- °C"
             powerConsumption.text = "Check power Consumption"
         }
     }
 
     private fun displayNoDeviceMessage() {
         powerSwitch.isChecked = false
-        roomTempValue.text = "-- lux"
-        outsideTempValue.text = "-- °C"
+        roomLightValue.text = "-- lux"
+        outsideLightValue.text = "-- lux"
         brightnessSeekBar.progress = 0
         brightnessTextView.text = "0 %"
         powerConsumption.text = "Check power Consumption"
@@ -164,9 +164,29 @@ class LightControlActivity : BaseActivity() {
             }
     }
 
+    private fun fetchOutsideLight() {
+        val outdoorRef = db.collection("Data").document(userId)
+            .collection("OutdoorSensors").document("outdoor")
+
+        outdoorRef.addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.w("LightControlActivity", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                val light = snapshot.getDouble("light") ?: Double.NaN
+                outsideLightValue.text = if (light.isNaN()) "-- lux" else "$light lux"
+            } else {
+                Log.d("LightControlActivity", "Current data: null")
+            }
+        }
+    }
+
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchLightDevices()
+        fetchOutsideLight() // Fetch outside light when network is available
     }
 
     override fun onNetworkLost() {
@@ -182,6 +202,7 @@ class LightControlActivity : BaseActivity() {
         super.onResume()
         if (userId.isNotEmpty()) {
             fetchLightDevices()
+            fetchOutsideLight() // Fetch outside light when resuming the activity
         }
     }
 }

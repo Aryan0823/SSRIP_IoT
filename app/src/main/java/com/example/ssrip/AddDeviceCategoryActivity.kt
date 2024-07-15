@@ -13,6 +13,7 @@ class AddDeviceCategoryActivity : BaseActivity() {
 
     private lateinit var db: FirebaseFirestore
     private lateinit var progressBar: ProgressBar
+    private lateinit var outdoorDeviceButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,19 +21,65 @@ class AddDeviceCategoryActivity : BaseActivity() {
 
         db = FirebaseFirestore.getInstance()
         progressBar = findViewById(R.id.progressBar)
+        outdoorDeviceButton = findViewById(R.id.mainButton)
 
         setupCategoryButtons()
+        checkOutdoorDeviceExistence()
     }
 
     private fun setupCategoryButtons() {
-        val categories = listOf("AC", "Humidifier", "Light", "Fan", "OutDoor Device")
+        val categories = listOf("AC", "Humidifier", "Light", "Fan")
         categories.forEach { category ->
-            val buttonId = when (category) {
-                "OutDoor Device" -> "mainButton"
-                else -> "${category.toLowerCase()}Button"
-            }
+            val buttonId = "${category.toLowerCase()}Button"
             findViewById<Button>(resources.getIdentifier(buttonId, "id", packageName))
                 .setOnClickListener { checkCategoryAndProceed(category) }
+        }
+
+        outdoorDeviceButton.setOnClickListener { handleOutdoorDeviceClick() }
+    }
+
+    private fun checkOutdoorDeviceExistence() {
+        showProgressBar()
+        val userId = sessionManager.getUserDetails()[SessionManager.KEY_USER_ID] ?: return
+        val outdoorDeviceRef = db.collection("Data").document(userId)
+            .collection("OutdoorSensors").document("outdoor")
+
+        outdoorDeviceRef.get().addOnSuccessListener { documentSnapshot ->
+            if (documentSnapshot.exists()) {
+                outdoorDeviceButton.isEnabled = false
+                outdoorDeviceButton.text = "Outdoor Device (Already Exists)"
+            } else {
+                outdoorDeviceButton.isEnabled = true
+                outdoorDeviceButton.text = "Add Outdoor Device"
+            }
+            hideProgressBar()
+        }.addOnFailureListener { e ->
+            hideProgressBar()
+            showError("Error checking outdoor device: ${e.message}")
+        }
+    }
+
+    private fun handleOutdoorDeviceClick() {
+        val userId = sessionManager.getUserDetails()[SessionManager.KEY_USER_ID] ?: return
+        val outdoorDeviceRef = db.collection("Data").document(userId)
+            .collection("OutdoorSensors").document("outdoor")
+
+        showProgressBar()
+        outdoorDeviceRef.get().addOnSuccessListener { documentSnapshot ->
+            hideProgressBar()
+            if (!documentSnapshot.exists()) {
+                // Redirect to AddDeviceActivity with OutdoorSensors category and outdoor device name
+                val intent = Intent(this, AddDeviceActivity::class.java).apply {
+                    putExtra("CATEGORY", "OutdoorSensors")
+                    putExtra("DEVICE_NAME", "outdoor")
+                }
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Outdoor device already exists", Toast.LENGTH_SHORT).show()
+            }
+        }.addOnFailureListener { e ->
+            hideProgressBar()
+            showError("Error checking outdoor device: ${e.message}")
         }
     }
 
@@ -111,7 +158,7 @@ class AddDeviceCategoryActivity : BaseActivity() {
     }
 
     override fun onNetworkAvailable() {
-        // If there's any pending operation, retry it here
+        checkOutdoorDeviceExistence()
     }
 
     override fun onNetworkLost() {
