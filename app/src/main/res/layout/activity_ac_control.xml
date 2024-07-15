@@ -195,11 +195,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/floatingActionButton2"
         app:layout_constraintTop_toTopOf="@+id/floatingActionButton2" />
-
-
-
-
-
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>

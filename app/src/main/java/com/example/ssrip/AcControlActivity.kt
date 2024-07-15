@@ -7,7 +7,10 @@ import android.widget.*
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-
+import androidx.appcompat.app.AlertDialog
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.ktx.functions
+import com.google.firebase.ktx.Firebase
 class AcControlActivity : BaseActivity() {
     private lateinit var deviceSelector: Spinner
     private lateinit var powerSwitch: Switch
@@ -19,6 +22,7 @@ class AcControlActivity : BaseActivity() {
     private lateinit var powerConsumption: TextView
 
     private lateinit var db: FirebaseFirestore
+    private lateinit var functions: FirebaseFunctions
     private lateinit var userId: String
     private var acDevices: MutableList<String> = mutableListOf()
     private var deviceListener: ListenerRegistration? = null
@@ -31,6 +35,7 @@ class AcControlActivity : BaseActivity() {
         setupListeners()
 
         db = FirebaseFirestore.getInstance()
+        functions = Firebase.functions
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchAcDevices()
@@ -143,10 +148,67 @@ class AcControlActivity : BaseActivity() {
 
     private fun updateDevicePowerState(isOn: Boolean) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        db.collection("Data").document(userId).collection("AC").document(selectedDevice)
-            .update("deviceStatus", if (isOn) "ON" else "OFF")
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "Error updating power state: ${exception.message}", Toast.LENGTH_SHORT).show()
+        val roomTemp = roomTempValue.text.toString().replace(" °C", "").toFloatOrNull() ?: 0f
+
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to selectedDevice,
+            "turnOn" to isOn,
+            "roomTemperature" to roomTemp
+        )
+
+        functions
+            .getHttpsCallable("toggleAC")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                when (response?.get("status") as? String) {
+                    "confirmation_required" -> showConfirmationDialog(selectedDevice)
+                    "on" -> {
+                        powerSwitch.isChecked = true
+                        Toast.makeText(this, "AC turned on", Toast.LENGTH_SHORT).show()
+                    }
+                    "off" -> {
+                        powerSwitch.isChecked = false
+                        Toast.makeText(this, "AC turned off", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+    private fun showConfirmationDialog(deviceName: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirm AC Operation")
+            .setMessage("Are you sure you want to turn on the AC?")
+            .setPositiveButton("Yes") { _, _ ->
+                confirmAcToggle(deviceName, true)
+            }
+            .setNegativeButton("No") { _, _ ->
+                confirmAcToggle(deviceName, false)
+            }
+            .show()
+    }
+    private fun confirmAcToggle(deviceName: String, confirm: Boolean) {
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to deviceName,
+            "confirm" to confirm
+        )
+
+        functions
+            .getHttpsCallable("confirmAC")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                runOnUiThread {
+                    powerSwitch.isChecked = response?.get("status") as? String == "on"
+                    Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

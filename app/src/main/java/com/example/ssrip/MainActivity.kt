@@ -1,9 +1,13 @@
 package com.example.ssrip
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.cardview.widget.CardView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.google.firebase.auth.FirebaseAuth
 
@@ -14,6 +18,10 @@ class MainActivity : BaseActivity() {
     private lateinit var loginButton: View
     private lateinit var signUpButton: View
 
+    companion object {
+        private const val REQUEST_CODE_POST_NOTIFICATIONS = 1
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -23,6 +31,7 @@ class MainActivity : BaseActivity() {
         loginButton = findViewById(R.id.loginButton)
         signUpButton = findViewById(R.id.signUpButton)
 
+        checkNotificationPermission()
         checkLoginStatus()
 
         loginButton.setOnClickListener {
@@ -31,6 +40,14 @@ class MainActivity : BaseActivity() {
 
         signUpButton.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
+        }
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_POST_NOTIFICATIONS)
+            }
         }
     }
 
@@ -48,6 +65,19 @@ class MainActivity : BaseActivity() {
         } else {
             progressBar.isVisible = false
             loginCard.isVisible = true
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_POST_NOTIFICATIONS) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+                // You can handle post-permission granted tasks here if needed
+            } else {
+                // Permission denied
+                // Optionally inform the user about the necessity of the permission
+            }
         }
     }
 }
