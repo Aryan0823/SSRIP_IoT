@@ -123,7 +123,7 @@ class AcControlActivity : BaseActivity() {
     private fun updateUIWithDeviceData(data: Map<String, Any>?) {
         data?.let {
             setTempTextView.text = "${it["setTemperature"]} °C"
-            powerSwitch.isChecked = it["deviceStatus"] as? Boolean ?: false
+            powerSwitch.isChecked = it["deviceStatus"] as? String == "ON"
             roomTempValue.text = "${it["roomTemperature"]} °C"
             // Note: outdoorTemperature is not in the provided structure, so we'll leave it out
             // outsideTempValue.text = "${it["outdoorTemperature"]} °C"
@@ -144,7 +144,7 @@ class AcControlActivity : BaseActivity() {
     private fun updateDevicePowerState(isOn: Boolean) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
         db.collection("Data").document(userId).collection("AC").document(selectedDevice)
-            .update("deviceStatus", isOn)
+            .update("deviceStatus", if (isOn) "ON" else "OFF")
             .addOnFailureListener { exception ->
                 Toast.makeText(this, "Error updating power state: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
