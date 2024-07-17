@@ -10,9 +10,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : BaseActivity() {
-
     private lateinit var progressBar: View
     private lateinit var loginCard: CardView
     private lateinit var loginButton: View
@@ -41,6 +42,16 @@ class MainActivity : BaseActivity() {
         signUpButton.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
+
+        // Request FCM token
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                saveFCMTokenToFirestore(token)
+            } else {
+                println("Error getting FCM token: ${task.exception?.message}")
+            }
+        }
     }
 
     private fun checkNotificationPermission() {
@@ -54,7 +65,6 @@ class MainActivity : BaseActivity() {
     private fun checkLoginStatus() {
         progressBar.isVisible = true
         loginCard.isVisible = false
-
         val user = FirebaseAuth.getInstance().currentUser
         if (user != null) {
             val userId = user.uid
@@ -65,6 +75,20 @@ class MainActivity : BaseActivity() {
         } else {
             progressBar.isVisible = false
             loginCard.isVisible = true
+        }
+    }
+
+    private fun saveFCMTokenToFirestore(token: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            FirebaseFirestore.getInstance().collection("users").document(userId)
+                .update("fcmToken", token)
+                .addOnSuccessListener {
+                    println("FCM token updated successfully")
+                }
+                .addOnFailureListener { e ->
+                    println("Error updating FCM token: ${e.message}")
+                }
         }
     }
 
