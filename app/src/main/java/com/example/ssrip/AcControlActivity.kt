@@ -12,6 +12,8 @@ import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import androidx.appcompat.app.AppCompatActivity
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AcControlActivity : BaseActivity() {
     private lateinit var deviceSelector: Spinner
@@ -41,7 +43,7 @@ class AcControlActivity : BaseActivity() {
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchAcDevices()
-            fetchOutsideTemperature() // Add this line to fetch and display the outside temperature
+            fetchOutsideTemperature()
         } else {
             Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show()
         }
@@ -133,10 +135,6 @@ class AcControlActivity : BaseActivity() {
             setTempTextView.text = "${it["setTemperature"]} °C"
             powerSwitch.isChecked = it["deviceStatus"] as? String == "ON"
             roomTempValue.text = "${it["roomTemperature"]} °C"
-            // Note: outdoorTemperature is not in the provided structure, so we'll leave it out
-            // outsideTempValue.text = "${it["outdoorTemperature"]} °C"
-            // powerConsumption is also not in the structure, so we'll leave it out
-            // powerConsumption.text = "${it["powerConsumption"]} W"
         }
     }
 
@@ -170,15 +168,44 @@ class AcControlActivity : BaseActivity() {
                     "on" -> {
                         powerSwitch.isChecked = true
                         Toast.makeText(this, "AC turned on", Toast.LENGTH_SHORT).show()
+                        recordPowerState(selectedDevice, true)
                     }
                     "off" -> {
                         powerSwitch.isChecked = false
                         Toast.makeText(this, "AC turned off", Toast.LENGTH_SHORT).show()
+                        recordPowerState(selectedDevice, false)
                     }
                 }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun recordPowerState(deviceName: String, isOn: Boolean) {
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+        val date = dateFormat.format(calendar.time)
+        val time = timeFormat.format(calendar.time)
+
+        val deviceStatus = if (isOn) "ON" else "OFF"
+
+        val powerStateData = hashMapOf(
+            "deviceStatus" to deviceStatus,
+            "timestamp" to calendar.timeInMillis
+        )
+
+        db.collection("Data").document(userId)
+            .collection("AC").document(deviceName)
+            .collection(date).document(time)
+            .set(powerStateData)
+            .addOnSuccessListener {
+                Log.d("AcControlActivity", "Power state recorded successfully")
+            }
+            .addOnFailureListener { e ->
+                Log.e("AcControlActivity", "Error recording power state", e)
             }
     }
 
@@ -208,8 +235,10 @@ class AcControlActivity : BaseActivity() {
             .addOnSuccessListener { result ->
                 val response = result.data as? Map<String, Any>
                 runOnUiThread {
-                    powerSwitch.isChecked = response?.get("status") as? String == "on"
+                    val isOn = response?.get("status") as? String == "on"
+                    powerSwitch.isChecked = isOn
                     Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
+                    recordPowerState(deviceName, isOn)
                 }
             }
             .addOnFailureListener { e ->
@@ -254,7 +283,7 @@ class AcControlActivity : BaseActivity() {
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchAcDevices()
-        fetchOutsideTemperature() // Fetch outside temperature when network is available
+        fetchOutsideTemperature()
     }
 
     override fun onNetworkLost() {
@@ -270,7 +299,7 @@ class AcControlActivity : BaseActivity() {
         super.onResume()
         if (userId.isNotEmpty()) {
             fetchAcDevices()
-            fetchOutsideTemperature() // Fetch outside temperature when resuming the activity
+            fetchOutsideTemperature()
         }
     }
 }

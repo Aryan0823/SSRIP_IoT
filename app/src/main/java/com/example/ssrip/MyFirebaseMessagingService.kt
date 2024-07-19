@@ -13,7 +13,16 @@ import com.google.firebase.messaging.RemoteMessage
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        showNotification(remoteMessage.notification?.title, remoteMessage.notification?.body)
+
+        // Handle data messages
+        remoteMessage.data.isNotEmpty().let {
+            handleDataMessage(remoteMessage.data)
+        }
+
+        // Handle notification messages
+        remoteMessage.notification?.let {
+            showNotification(it.title, it.body)
+        }
     }
 
     override fun onNewToken(token: String) {
@@ -21,8 +30,22 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         saveFCMTokenToFirestore(token)
     }
 
+    private fun handleDataMessage(data: Map<String, String>) {
+        val type = data["type"]
+        val title = data["title"]
+        val message = data["message"]
+
+        when (type) {
+            "ac_alert" -> showNotification("AC Alert", message)
+            "fan_alert" -> showNotification("Fan Alert", message)
+            "fan_speed_update" -> showNotification("Fan Speed Update", message)
+            "fan_status_update" -> showNotification("Fan Status Update", message)
+            else -> showNotification(title, message)
+        }
+    }
+
     private fun showNotification(title: String?, message: String?) {
-        val channelId = "AC_CONTROL_CHANNEL"
+        val channelId = "SMART_HOME_CONTROL_CHANNEL"
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
@@ -30,11 +53,18 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setAutoCancel(true)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "AC Control Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(
+                channelId,
+                "Smart Home Control Notifications",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
             notificationManager.createNotificationChannel(channel)
         }
-        notificationManager.notify(0, notificationBuilder.build())
+
+        val notificationId = System.currentTimeMillis().toInt()
+        notificationManager.notify(notificationId, notificationBuilder.build())
     }
 
     private fun saveFCMTokenToFirestore(token: String) {

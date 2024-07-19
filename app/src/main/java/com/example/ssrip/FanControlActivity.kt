@@ -4,8 +4,12 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.ktx.functions
+import com.google.firebase.ktx.Firebase
 
 class FanControlActivity : BaseActivity() {
     private lateinit var deviceSelector: Spinner
@@ -17,6 +21,7 @@ class FanControlActivity : BaseActivity() {
     private lateinit var powerConsumption: TextView
 
     private lateinit var db: FirebaseFirestore
+    private lateinit var functions: FirebaseFunctions
     private lateinit var userId: String
     private var fanDevices: MutableList<String> = mutableListOf()
     private var deviceListener: ListenerRegistration? = null
@@ -29,10 +34,11 @@ class FanControlActivity : BaseActivity() {
         setupListeners()
 
         db = FirebaseFirestore.getInstance()
+        functions = Firebase.functions
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchFanDevices()
-            fetchOutsideTemperature() // Add this line to fetch and display the outside temperature
+            fetchOutsideTemperature()
         } else {
             Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show()
         }
@@ -127,9 +133,6 @@ class FanControlActivity : BaseActivity() {
             roomTempValue.text = "${it["roomTemperature"]} °C"
             fanSpeedSeekBar.progress = (it["setFanSpeed"] as? Long)?.toInt() ?: 0
             fanSpeedTextView.text = fanSpeedSeekBar.progress.toString()
-            // Note: outdoorTemperature is not in the provided structure, so we'll leave it out
-            // outsideTempValue.text = "-- °C"
-            // powerConsumption is also not in the structure, so we'll leave it out
             powerConsumption.text = "Check power Consumption"
         }
     }
@@ -146,22 +149,160 @@ class FanControlActivity : BaseActivity() {
 
     private fun updateDevicePowerState(isOn: Boolean) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        db.collection("Data").document(userId).collection("Fan").document(selectedDevice)
-            .update("deviceStatus", if (isOn) "ON" else "OFF")
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "Error updating power state: ${exception.message}", Toast.LENGTH_SHORT).show()
+        val roomTemp = roomTempValue.text.toString().replace(" °C", "").toDoubleOrNull() ?: 0.0
+
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to selectedDevice,
+            "turnOn" to isOn,
+            "roomTemperature" to roomTemp
+        )
+
+        functions
+            .getHttpsCallable("toggleFan")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                when (response?.get("status") as? String) {
+                    "confirmation_required" -> showFanToggleConfirmationDialog(
+                        selectedDevice,
+                        response["recommendedSpeed"] as? Int ?: 0
+                    )
+                    "off" -> {
+                        powerSwitch.isChecked = false
+                        fanSpeedSeekBar.progress = 0
+                        fanSpeedTextView.text = "0"
+                        Toast.makeText(this, "Fan turned off", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun showFanToggleConfirmationDialog(deviceName: String, recommendedSpeed: Int) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirm Fan Operation")
+            .setMessage("Do you want to turn on the fan at speed $recommendedSpeed?")
+            .setPositiveButton("Yes") { _, _ ->
+                confirmFanToggle(deviceName, true, recommendedSpeed)
+            }
+            .setNegativeButton("No") { _, _ ->
+                confirmFanToggle(deviceName, false, 0)
+            }
+            .show()
+    }
+
+    private fun confirmFanToggle(deviceName: String, confirm: Boolean, speed: Int) {
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to deviceName,
+            "confirm" to confirm,
+            "speed" to speed
+        )
+
+        functions
+            .getHttpsCallable("confirmFanToggle")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                runOnUiThread {
+                    powerSwitch.isChecked = response?.get("status") as? String == "on"
+                    if (confirm) {
+                        fanSpeedSeekBar.progress = speed
+                        fanSpeedTextView.text = speed.toString()
+                    }
+                    Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun updateFanSpeed(speed: Int) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        db.collection("Data").document(userId).collection("Fan").document(selectedDevice)
-            .update("setFanSpeed", speed)
-            .addOnSuccessListener {
-                fanSpeedTextView.text = speed.toString()
+        val roomTemp = roomTempValue.text.toString().replace(" °C", "").toDoubleOrNull() ?: 0.0
+
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to selectedDevice,
+            "newSpeed" to speed,
+            "roomTemperature" to roomTemp
+        )
+
+        functions
+            .getHttpsCallable("updateFanSpeed")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                when (response?.get("status") as? String) {
+                    "confirmation_required" -> showFanSpeedConfirmationDialog(
+                        selectedDevice,
+                        speed,
+                        response["recommendedSpeed"] as? Int ?: 0
+                    )
+                    "updated" -> {
+                        fanSpeedTextView.text = speed.toString()
+                        Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
+                    }
+                    "off" -> {
+                        powerSwitch.isChecked = false
+                        fanSpeedSeekBar.progress = 0
+                        fanSpeedTextView.text = "0"
+                        Toast.makeText(this, "Fan turned off", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "Error updating fan speed: ${exception.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun showFanSpeedConfirmationDialog(deviceName: String, requestedSpeed: Int, recommendedSpeed: Int) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirm Fan Speed")
+            .setMessage("The recommended speed is $recommendedSpeed. Do you want to set it to $requestedSpeed instead?")
+            .setPositiveButton("Yes") { _, _ ->
+                confirmFanSpeed(deviceName, requestedSpeed)
+            }
+            .setNegativeButton("No") { _, _ ->
+                fanSpeedSeekBar.progress = recommendedSpeed
+                fanSpeedTextView.text = recommendedSpeed.toString()
+            }
+            .show()
+    }
+
+    private fun confirmFanSpeed(deviceName: String, confirmedSpeed: Int) {
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to deviceName,
+            "confirmedSpeed" to confirmedSpeed
+        )
+
+        functions
+            .getHttpsCallable("confirmFanSpeed")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                runOnUiThread {
+                    when (response?.get("status") as? String) {
+                        "updated" -> {
+                            fanSpeedTextView.text = confirmedSpeed.toString()
+                            Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
+                        }
+                        "off" -> {
+                            powerSwitch.isChecked = false
+                            fanSpeedSeekBar.progress = 0
+                            fanSpeedTextView.text = "0"
+                            Toast.makeText(this, "Fan turned off", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -187,7 +328,7 @@ class FanControlActivity : BaseActivity() {
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchFanDevices()
-        fetchOutsideTemperature() // Fetch outside temperature when network is available
+        fetchOutsideTemperature()
     }
 
     override fun onNetworkLost() {
@@ -203,7 +344,7 @@ class FanControlActivity : BaseActivity() {
         super.onResume()
         if (userId.isNotEmpty()) {
             fetchFanDevices()
-            fetchOutsideTemperature() // Fetch outside temperature when resuming the activity
+            fetchOutsideTemperature()
         }
     }
 }
