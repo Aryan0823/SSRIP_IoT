@@ -168,11 +168,17 @@ class FanControlActivity : BaseActivity() {
                         selectedDevice,
                         response["recommendedSpeed"] as? Int ?: 0
                     )
+                    "on" -> {
+                        powerSwitch.isChecked = true
+                        fanSpeedSeekBar.progress = response["fanSpeed"] as? Int ?: 0
+                        fanSpeedTextView.text = fanSpeedSeekBar.progress.toString()
+                        Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
+                    }
                     "off" -> {
                         powerSwitch.isChecked = false
                         fanSpeedSeekBar.progress = 0
                         fanSpeedTextView.text = "0"
-                        Toast.makeText(this, "Fan turned off", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -184,7 +190,7 @@ class FanControlActivity : BaseActivity() {
     private fun showFanToggleConfirmationDialog(deviceName: String, recommendedSpeed: Int) {
         AlertDialog.Builder(this)
             .setTitle("Confirm Fan Operation")
-            .setMessage("Do you want to turn on the fan at speed $recommendedSpeed?")
+            .setMessage("Are you sure you want to turn on the Fan?")
             .setPositiveButton("Yes") { _, _ ->
                 confirmFanToggle(deviceName, true, recommendedSpeed)
             }
@@ -262,8 +268,8 @@ class FanControlActivity : BaseActivity() {
 
     private fun showFanSpeedConfirmationDialog(deviceName: String, requestedSpeed: Int, recommendedSpeed: Int) {
         AlertDialog.Builder(this)
-            .setTitle("Confirm Fan Speed")
-            .setMessage("The recommended speed is $recommendedSpeed. Do you want to set it to $requestedSpeed instead?")
+            .setTitle("Confirm FanSpeed Operation")
+            .setMessage("Are you sure you want to Increase Fan Speed?")
             .setPositiveButton("Yes") { _, _ ->
                 confirmFanSpeed(deviceName, requestedSpeed)
             }

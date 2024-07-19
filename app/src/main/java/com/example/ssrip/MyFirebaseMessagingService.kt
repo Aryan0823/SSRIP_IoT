@@ -14,12 +14,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        // Handle data messages
         remoteMessage.data.isNotEmpty().let {
             handleDataMessage(remoteMessage.data)
         }
 
-        // Handle notification messages
         remoteMessage.notification?.let {
             showNotification(it.title, it.body)
         }
@@ -36,10 +34,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val message = data["message"]
 
         when (type) {
-            "ac_alert" -> showNotification("AC Alert", message)
             "fan_alert" -> showNotification("Fan Alert", message)
             "fan_speed_update" -> showNotification("Fan Speed Update", message)
             "fan_status_update" -> showNotification("Fan Status Update", message)
+            "room_temperature_alert" -> showNotification("Room Temperature Alert", message)
             else -> showNotification(title, message)
         }
     }
