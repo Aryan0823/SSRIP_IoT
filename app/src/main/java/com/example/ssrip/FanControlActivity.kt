@@ -149,41 +149,17 @@ class FanControlActivity : BaseActivity() {
 
     private fun updateDevicePowerState(isOn: Boolean) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        val roomTemp = roomTempValue.text.toString().replace(" °C", "").toDoubleOrNull() ?: 0.0
+        val db = FirebaseFirestore.getInstance()
 
-        val data = hashMapOf(
-            "userId" to userId,
-            "deviceName" to selectedDevice,
-            "turnOn" to isOn,
-            "roomTemperature" to roomTemp
-        )
-
-        functions
-            .getHttpsCallable("toggleFan")
-            .call(data)
-            .addOnSuccessListener { result ->
-                val response = result.data as? Map<String, Any>
-                when (response?.get("status") as? String) {
-                    "confirmation_required" -> showFanToggleConfirmationDialog(
-                        selectedDevice,
-                        response["recommendedSpeed"] as? Int ?: 0
-                    )
-                    "on" -> {
-                        powerSwitch.isChecked = true
-                        fanSpeedSeekBar.progress = response["fanSpeed"] as? Int ?: 0
-                        fanSpeedTextView.text = fanSpeedSeekBar.progress.toString()
-                        Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
-                    }
-                    "off" -> {
-                        powerSwitch.isChecked = false
-                        fanSpeedSeekBar.progress = 0
-                        fanSpeedTextView.text = "0"
-                        Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
-                    }
-                }
+        db.collection("Data").document(userId)
+            .collection("Fan").document(selectedDevice)
+            .update("deviceStatus", if (isOn) "ON" else "OFF")
+            .addOnSuccessListener {
+                // The update was successful, but we don't need to do anything here
+                // The Firebase Function will handle logging and notifications
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error updating fan status: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

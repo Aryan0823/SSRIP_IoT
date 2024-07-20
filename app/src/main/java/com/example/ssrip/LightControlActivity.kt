@@ -4,8 +4,12 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.ktx.functions
+import com.google.firebase.ktx.Firebase
 
 class LightControlActivity : BaseActivity() {
     private lateinit var deviceSelector: Spinner
@@ -14,9 +18,9 @@ class LightControlActivity : BaseActivity() {
     private lateinit var brightnessTextView: TextView
     private lateinit var roomLightValue: TextView
     private lateinit var powerConsumption: TextView
-    private lateinit var outsideLightValue: TextView
 
     private lateinit var db: FirebaseFirestore
+    private lateinit var functions: FirebaseFunctions
     private lateinit var userId: String
     private var lightDevices: MutableList<String> = mutableListOf()
     private var deviceListener: ListenerRegistration? = null
@@ -29,10 +33,10 @@ class LightControlActivity : BaseActivity() {
         setupListeners()
 
         db = FirebaseFirestore.getInstance()
+        functions = Firebase.functions
         userId = getUserDetails()[SessionManager.KEY_USER_ID] ?: ""
         if (userId.isNotEmpty()) {
             fetchLightDevices()
-            fetchOutsideLight() // Add this line to fetch and display the outside light
         } else {
             Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show()
         }
@@ -44,10 +48,7 @@ class LightControlActivity : BaseActivity() {
         brightnessSeekBar = findViewById(R.id.seekBar)
         brightnessTextView = findViewById(R.id.textView3)
         roomLightValue = findViewById(R.id.roomLightValue)
-        powerConsumption = findViewById(R.id.powerconsuption)
-        outsideLightValue = findViewById(R.id.outsideLightValue)
-
-        brightnessSeekBar.max = 100 // Set max brightness to 100%
+        powerConsumption = findViewById(R.id.materialCardView3)
     }
 
     private fun setupListeners() {
@@ -67,7 +68,7 @@ class LightControlActivity : BaseActivity() {
         brightnessSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    updateBrightness(progress)
+                    updateLightBrightness(progress)
                 }
             }
 
@@ -128,7 +129,7 @@ class LightControlActivity : BaseActivity() {
             powerSwitch.isChecked = (it["deviceStatus"] as? String == "ON")
             roomLightValue.text = "${it["roomLight"]} lux"
             brightnessSeekBar.progress = (it["setBrightness"] as? Long)?.toInt() ?: 0
-            brightnessTextView.text = "${brightnessSeekBar.progress} %"
+            brightnessTextView.text = "${brightnessSeekBar.progress}%"
             powerConsumption.text = "Check power Consumption"
         }
     }
@@ -136,57 +137,117 @@ class LightControlActivity : BaseActivity() {
     private fun displayNoDeviceMessage() {
         powerSwitch.isChecked = false
         roomLightValue.text = "-- lux"
-        outsideLightValue.text = "-- lux"
         brightnessSeekBar.progress = 0
-        brightnessTextView.text = "0 %"
+        brightnessTextView.text = "0%"
         powerConsumption.text = "Check power Consumption"
         Toast.makeText(this, "No light device data available", Toast.LENGTH_SHORT).show()
     }
 
     private fun updateDevicePowerState(isOn: Boolean) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        db.collection("Data").document(userId).collection("Light").document(selectedDevice)
-            .update("deviceStatus", if (isOn) "ON" else "OFF")
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "Error updating power state: ${exception.message}", Toast.LENGTH_SHORT).show()
+        val roomLight = roomLightValue.text.toString().replace(" lux", "").toDoubleOrNull() ?: 0.0
+
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to selectedDevice,
+            "turnOn" to isOn,
+            "roomLight" to roomLight
+        )
+
+        functions
+            .getHttpsCallable("toggleLight")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                when (response?.get("status") as? String) {
+                    "confirmation_required" -> showLightToggleConfirmationDialog(selectedDevice)
+                    "on" -> {
+                        powerSwitch.isChecked = true
+                        brightnessSeekBar.progress = 50
+                        brightnessTextView.text = "50%"
+                        Toast.makeText(this, "Light turned on", Toast.LENGTH_SHORT).show()
+                    }
+                    "off" -> {
+                        powerSwitch.isChecked = false
+                        brightnessSeekBar.progress = 0
+                        brightnessTextView.text = "0%"
+                        Toast.makeText(this, "Light turned off", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun updateBrightness(brightness: Int) {
+    private fun showLightToggleConfirmationDialog(deviceName: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Confirm Light Operation")
+            .setMessage("Are you sure you want to turn on the Light?")
+            .setPositiveButton("Yes") { _, _ ->
+                confirmLightToggle(deviceName, true)
+            }
+            .setNegativeButton("No") { _, _ ->
+                confirmLightToggle(deviceName, false)
+            }
+            .show()
+    }
+
+    private fun confirmLightToggle(deviceName: String, confirm: Boolean) {
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to deviceName,
+            "confirm" to confirm
+        )
+
+        functions
+            .getHttpsCallable("confirmLightToggle")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                runOnUiThread {
+                    powerSwitch.isChecked = response?.get("status") as? String == "on"
+                    if (confirm) {
+                        brightnessSeekBar.progress = 50
+                        brightnessTextView.text = "50%"
+                    }
+                    Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateLightBrightness(brightness: Int) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        db.collection("Data").document(userId).collection("Light").document(selectedDevice)
-            .update("setBrightness", brightness)
-            .addOnSuccessListener {
-                brightnessTextView.text = "$brightness %"
-            }
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "Error updating brightness: ${exception.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
 
-    private fun fetchOutsideLight() {
-        val outdoorRef = db.collection("Data").document(userId)
-            .collection("OutdoorSensors").document("outdoor")
+        val data = hashMapOf(
+            "userId" to userId,
+            "deviceName" to selectedDevice,
+            "newBrightness" to brightness
+        )
 
-        outdoorRef.addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                Log.w("LightControlActivity", "Listen failed.", e)
-                return@addSnapshotListener
+        functions
+            .getHttpsCallable("updateLightBrightness")
+            .call(data)
+            .addOnSuccessListener { result ->
+                val response = result.data as? Map<String, Any>
+                when (response?.get("status") as? String) {
+                    "updated" -> {
+                        brightnessTextView.text = "$brightness%"
+                        Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-
-            if (snapshot != null && snapshot.exists()) {
-                val light = snapshot.getDouble("light") ?: Double.NaN
-                outsideLightValue.text = if (light.isNaN()) "-- lux" else "$light lux"
-            } else {
-                Log.d("LightControlActivity", "Current data: null")
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-        }
     }
 
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchLightDevices()
-        fetchOutsideLight() // Fetch outside light when network is available
     }
 
     override fun onNetworkLost() {
@@ -202,7 +263,6 @@ class LightControlActivity : BaseActivity() {
         super.onResume()
         if (userId.isNotEmpty()) {
             fetchLightDevices()
-            fetchOutsideLight() // Fetch outside light when resuming the activity
         }
     }
 }
