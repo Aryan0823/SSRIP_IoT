@@ -149,18 +149,18 @@ class FanControlActivity : BaseActivity() {
 
     private fun updateDevicePowerState(isOn: Boolean) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        val db = FirebaseFirestore.getInstance()
+        val roomTemp = roomTempValue.text.toString().replace(" °C", "").toDoubleOrNull() ?: 0.0
 
-        db.collection("Data").document(userId)
-            .collection("Fan").document(selectedDevice)
-            .update("deviceStatus", if (isOn) "ON" else "OFF")
-            .addOnSuccessListener {
-                // The update was successful, but we don't need to do anything here
-                // The Firebase Function will handle logging and notifications
+        if (isOn) {
+            // Check temperature before turning on
+            if (roomTemp <= 10) {
+                showFanToggleConfirmationDialog(selectedDevice, getFanSpeedForTemperature(roomTemp))
+            } else {
+                confirmFanToggle(selectedDevice, true, getFanSpeedForTemperature(roomTemp))
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Error updating fan status: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        } else {
+            confirmFanToggle(selectedDevice, false, 0)
+        }
     }
 
     private fun showFanToggleConfirmationDialog(deviceName: String, recommendedSpeed: Int) {
@@ -171,7 +171,7 @@ class FanControlActivity : BaseActivity() {
                 confirmFanToggle(deviceName, true, recommendedSpeed)
             }
             .setNegativeButton("No") { _, _ ->
-                confirmFanToggle(deviceName, false, 0)
+                powerSwitch.isChecked = false  // Keep the switch in the OFF position
             }
             .show()
     }
@@ -190,10 +190,17 @@ class FanControlActivity : BaseActivity() {
             .addOnSuccessListener { result ->
                 val response = result.data as? Map<String, Any>
                 runOnUiThread {
-                    powerSwitch.isChecked = response?.get("status") as? String == "on"
-                    if (confirm) {
-                        fanSpeedSeekBar.progress = speed
-                        fanSpeedTextView.text = speed.toString()
+                    when (response?.get("status") as? String) {
+                        "on" -> {
+                            powerSwitch.isChecked = true
+                            fanSpeedSeekBar.progress = speed
+                            fanSpeedTextView.text = speed.toString()
+                        }
+                        "off" -> {
+                            powerSwitch.isChecked = false
+                            fanSpeedSeekBar.progress = 0
+                            fanSpeedTextView.text = "0"
+                        }
                     }
                     Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
                 }
@@ -201,6 +208,15 @@ class FanControlActivity : BaseActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+    private fun getFanSpeedForTemperature(temperature: Double): Int {
+        return when {
+            temperature > 25 -> 4
+            temperature > 20 -> 3
+            temperature > 15 -> 2
+            temperature > 10 -> 1
+            else -> 0
+        }
     }
 
     private fun updateFanSpeed(speed: Int) {
