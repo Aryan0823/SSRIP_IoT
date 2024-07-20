@@ -94,6 +94,7 @@ class NameDeviceActivity : BaseActivity() {
                 "deviceName" to deviceName,
                 "deviceStatus" to "OFF",
                 "roomHumidity" to 0,
+                "roomTemperature" to 0,
                 "setHumidity" to 0
             )
             "OutDoor Device" -> hashMapOf(

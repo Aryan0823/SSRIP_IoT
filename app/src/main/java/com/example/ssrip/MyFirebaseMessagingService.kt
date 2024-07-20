@@ -40,6 +40,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             "ac_status_update" -> showNotification("AC Status Update", message)
             "ac_temperature_alert" -> showNotification("AC Temperature Alert", message)
             "room_temperature_alert" -> showNotification("Room Temperature Alert", message)
+            "light_status_update" -> showNotification("Light Status Update", message)
+            "light_brightness_update" -> showNotification("Light Brightness Update", message)
+            "room_light_alert" -> showNotification("Room Light Alert", message)
             else -> showNotification(title, message)
         }
     }

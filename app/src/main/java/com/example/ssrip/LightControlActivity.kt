@@ -17,6 +17,7 @@ class LightControlActivity : BaseActivity() {
     private lateinit var brightnessSeekBar: SeekBar
     private lateinit var brightnessTextView: TextView
     private lateinit var roomLightValue: TextView
+    private lateinit var outsideLightValue: TextView
     private lateinit var powerConsumption: TextView
 
     private lateinit var db: FirebaseFirestore
@@ -48,7 +49,8 @@ class LightControlActivity : BaseActivity() {
         brightnessSeekBar = findViewById(R.id.seekBar)
         brightnessTextView = findViewById(R.id.textView3)
         roomLightValue = findViewById(R.id.roomLightValue)
-        powerConsumption = findViewById(R.id.materialCardView3)
+        outsideLightValue = findViewById(R.id.outsideLightValue)
+        powerConsumption = findViewById(R.id.powerconsuption)
     }
 
     private fun setupListeners() {
@@ -62,7 +64,7 @@ class LightControlActivity : BaseActivity() {
         }
 
         powerSwitch.setOnCheckedChangeListener { _, isChecked ->
-            updateDevicePowerState(isChecked)
+            toggleLight(isChecked)
         }
 
         brightnessSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -127,25 +129,33 @@ class LightControlActivity : BaseActivity() {
     private fun updateUIWithDeviceData(data: Map<String, Any>?) {
         data?.let {
             powerSwitch.isChecked = (it["deviceStatus"] as? String == "ON")
-            roomLightValue.text = "${it["roomLight"]} lux"
             brightnessSeekBar.progress = (it["setBrightness"] as? Long)?.toInt() ?: 0
             brightnessTextView.text = "${brightnessSeekBar.progress}%"
-            powerConsumption.text = "Check power Consumption"
+            roomLightValue.text = "${it["roomLight"]} lux"
+            // Update outside light and power consumption if available
+            outsideLightValue.text = "${it["outsideLight"] ?: "--"} lux"
+            powerConsumption.text = it["powerConsumption"]?.toString() ?: "Check power Consumption"
         }
     }
 
     private fun displayNoDeviceMessage() {
         powerSwitch.isChecked = false
-        roomLightValue.text = "-- lux"
         brightnessSeekBar.progress = 0
         brightnessTextView.text = "0%"
+        roomLightValue.text = "-- lux"
+        outsideLightValue.text = "-- lux"
         powerConsumption.text = "Check power Consumption"
         Toast.makeText(this, "No light device data available", Toast.LENGTH_SHORT).show()
     }
 
-    private fun updateDevicePowerState(isOn: Boolean) {
-        val selectedDevice = deviceSelector.selectedItem as? String ?: return
-        val roomLight = roomLightValue.text.toString().replace(" lux", "").toDoubleOrNull() ?: 0.0
+    private fun toggleLight(isOn: Boolean) {
+        val selectedDevice = deviceSelector.selectedItem as? String
+        if (selectedDevice == null) {
+            Toast.makeText(this, "No device selected", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val roomLight = roomLightValue.text.toString().replace(" lux", "").toFloatOrNull() ?: 0f
 
         val data = hashMapOf(
             "userId" to userId,
@@ -160,11 +170,14 @@ class LightControlActivity : BaseActivity() {
             .addOnSuccessListener { result ->
                 val response = result.data as? Map<String, Any>
                 when (response?.get("status") as? String) {
-                    "confirmation_required" -> showLightToggleConfirmationDialog(selectedDevice)
+                    "confirmation_required" -> {
+                        showLightToggleConfirmationDialog(selectedDevice, response["message"] as? String)
+                    }
                     "on" -> {
                         powerSwitch.isChecked = true
-                        brightnessSeekBar.progress = 50
-                        brightnessTextView.text = "50%"
+                        val brightness = (response["brightness"] as? Number)?.toInt() ?: 50
+                        brightnessSeekBar.progress = brightness
+                        brightnessTextView.text = "$brightness%"
                         Toast.makeText(this, "Light turned on", Toast.LENGTH_SHORT).show()
                     }
                     "off" -> {
@@ -173,22 +186,29 @@ class LightControlActivity : BaseActivity() {
                         brightnessTextView.text = "0%"
                         Toast.makeText(this, "Light turned off", Toast.LENGTH_SHORT).show()
                     }
+                    else -> {
+                        Toast.makeText(this, response?.get("message") as? String ?: "Unknown response", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                // Reset the switch to its previous state
+                powerSwitch.isChecked = !isOn
             }
     }
 
-    private fun showLightToggleConfirmationDialog(deviceName: String) {
+    private fun showLightToggleConfirmationDialog(deviceName: String, message: String?) {
         AlertDialog.Builder(this)
             .setTitle("Confirm Light Operation")
-            .setMessage("Are you sure you want to turn on the Light?")
+            .setMessage(message ?: "Are you sure you want to turn on the Light?")
             .setPositiveButton("Yes") { _, _ ->
                 confirmLightToggle(deviceName, true)
             }
             .setNegativeButton("No") { _, _ ->
                 confirmLightToggle(deviceName, false)
+                // Reset the switch to its previous state
+                powerSwitch.isChecked = false
             }
             .show()
     }
@@ -205,19 +225,32 @@ class LightControlActivity : BaseActivity() {
             .call(data)
             .addOnSuccessListener { result ->
                 val response = result.data as? Map<String, Any>
-                runOnUiThread {
-                    powerSwitch.isChecked = response?.get("status") as? String == "on"
-                    if (confirm) {
-                        brightnessSeekBar.progress = 50
-                        brightnessTextView.text = "50%"
+                when (response?.get("status") as? String) {
+                    "on" -> {
+                        powerSwitch.isChecked = true
+                        val brightness = (response["brightness"] as? Number)?.toInt() ?: 50
+                        brightnessSeekBar.progress = brightness
+                        brightnessTextView.text = "$brightness%"
+                        Toast.makeText(this, "Light turned on", Toast.LENGTH_SHORT).show()
                     }
-                    Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
+                    "off" -> {
+                        powerSwitch.isChecked = false
+                        brightnessSeekBar.progress = 0
+                        brightnessTextView.text = "0%"
+                        Toast.makeText(this, "Light operation cancelled", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        Toast.makeText(this, response?.get("message") as? String ?: "Unknown response", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                // Reset the switch to its previous state
+                powerSwitch.isChecked = false
             }
     }
+
 
     private fun updateLightBrightness(brightness: Int) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
@@ -233,12 +266,8 @@ class LightControlActivity : BaseActivity() {
             .call(data)
             .addOnSuccessListener { result ->
                 val response = result.data as? Map<String, Any>
-                when (response?.get("status") as? String) {
-                    "updated" -> {
-                        brightnessTextView.text = "$brightness%"
-                        Toast.makeText(this, response["message"] as? String, Toast.LENGTH_SHORT).show()
-                    }
-                }
+                brightnessTextView.text = "$brightness%"
+                Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
