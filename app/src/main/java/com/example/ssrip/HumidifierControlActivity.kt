@@ -18,6 +18,7 @@ class HumidifierControlActivity : BaseActivity() {
 
     private lateinit var powerConsumption: TextView
     private lateinit var outsideHumValue: TextView
+    private lateinit var roomTempValue: TextView  // New TextView for room temperature
 
     private lateinit var db: FirebaseFirestore
     private lateinit var userId: String
@@ -51,6 +52,7 @@ class HumidifierControlActivity : BaseActivity() {
 
         powerConsumption = findViewById(R.id.powerconsuption)
         outsideHumValue = findViewById(R.id.outsideHumValue)
+        roomTempValue = findViewById(R.id.roomTempValue)  // Initialize the new TextView
     }
 
     private fun setupListeners() {
@@ -128,6 +130,7 @@ class HumidifierControlActivity : BaseActivity() {
             setHumidityTextView.text = "${it["setHumidity"]} %"
             powerSwitch.isChecked = it["deviceStatus"] as? String == "ON"
             roomHumValue.text = "${it["roomHumidity"]} %"
+            roomTempValue.text = "${it["roomTemperature"]} °C"  // Update room temperature value
 
             powerConsumption.text = "Check power Consumption"
         }
@@ -137,8 +140,8 @@ class HumidifierControlActivity : BaseActivity() {
         setHumidityTextView.text = "-- %"
         powerSwitch.isChecked = false
         roomHumValue.text = "-- %"
-
         outsideHumValue.text = "-- %"
+        roomTempValue.text = "-- °C"  // Display default message for room temperature
         powerConsumption.text = "Check power Consumption"
         Toast.makeText(this, "No humidifier device data available", Toast.LENGTH_SHORT).show()
     }
