@@ -130,6 +130,7 @@ class AcControlActivity : BaseActivity() {
         }
     }
 
+
     private fun updateUIWithDeviceData(data: Map<String, Any>?) {
         data?.let {
             setTempTextView.text = "${it["setTemperature"]} °C"
@@ -146,6 +147,7 @@ class AcControlActivity : BaseActivity() {
         powerConsumption.text = "-- W"
         Toast.makeText(this, "No AC device data available", Toast.LENGTH_SHORT).show()
     }
+
 
     private fun updateDevicePowerState(isOn: Boolean) {
         val selectedDevice = deviceSelector.selectedItem as? String ?: return
@@ -164,60 +166,27 @@ class AcControlActivity : BaseActivity() {
             .addOnSuccessListener { result ->
                 val response = result.data as? Map<String, Any>
                 when (response?.get("status") as? String) {
-                    "confirmation_required" -> showConfirmationDialog(selectedDevice)
-                    "on" -> {
-                        powerSwitch.isChecked = true
-                        Toast.makeText(this, "AC turned on", Toast.LENGTH_SHORT).show()
-                        recordPowerState(selectedDevice, true)
-                    }
-                    "off" -> {
-                        powerSwitch.isChecked = false
-                        Toast.makeText(this, "AC turned off", Toast.LENGTH_SHORT).show()
-                        recordPowerState(selectedDevice, false)
-                    }
+                    "confirmation_required" -> showConfirmationDialog(selectedDevice, response["message"] as? String)
+                    "on" -> powerSwitch.isChecked = true
+                    "off" -> powerSwitch.isChecked = false
                 }
+                Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun recordPowerState(deviceName: String, isOn: Boolean) {
-        val calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
-        val date = dateFormat.format(calendar.time)
-        val time = timeFormat.format(calendar.time)
-
-        val deviceStatus = if (isOn) "ON" else "OFF"
-
-        val powerStateData = hashMapOf(
-            "deviceStatus" to deviceStatus,
-            "timestamp" to calendar.timeInMillis
-        )
-
-        db.collection("Data").document(userId)
-            .collection("AC").document(deviceName)
-            .collection(date).document(time)
-            .set(powerStateData)
-            .addOnSuccessListener {
-                Log.d("AcControlActivity", "Power state recorded successfully")
-            }
-            .addOnFailureListener { e ->
-                Log.e("AcControlActivity", "Error recording power state", e)
-            }
-    }
-
-    private fun showConfirmationDialog(deviceName: String) {
+    private fun showConfirmationDialog(deviceName: String, message: String?) {
         AlertDialog.Builder(this)
             .setTitle("Confirm AC Operation")
-            .setMessage("Are you sure you want to turn on the AC?")
+            .setMessage(message ?: "Are you sure you want to turn on the AC?")
             .setPositiveButton("Yes") { _, _ ->
                 confirmAcToggle(deviceName, true)
             }
             .setNegativeButton("No") { _, _ ->
-                confirmAcToggle(deviceName, false)
+                powerSwitch.isChecked = false
             }
             .show()
     }
@@ -235,10 +204,8 @@ class AcControlActivity : BaseActivity() {
             .addOnSuccessListener { result ->
                 val response = result.data as? Map<String, Any>
                 runOnUiThread {
-                    val isOn = response?.get("status") as? String == "on"
-                    powerSwitch.isChecked = isOn
+                    powerSwitch.isChecked = response?.get("status") as? String == "on"
                     Toast.makeText(this, response?.get("message") as? String, Toast.LENGTH_SHORT).show()
-                    recordPowerState(deviceName, isOn)
                 }
             }
             .addOnFailureListener { e ->
@@ -279,7 +246,30 @@ class AcControlActivity : BaseActivity() {
             }
         }
     }
+    private fun logAcOperation(deviceName: String, operation: String) {
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
+        val date = dateFormat.format(calendar.time)
+        val time = timeFormat.format(calendar.time)
+
+        val logData = hashMapOf(
+            "deviceStatus" to operation,
+            "timestamp" to calendar.timeInMillis
+        )
+
+        db.collection("Data").document(userId)
+            .collection("AC").document(deviceName)
+            .collection(date).document(time)
+            .set(logData)
+            .addOnSuccessListener {
+                Log.d("AcControlActivity", "AC operation logged successfully")
+            }
+            .addOnFailureListener { e ->
+                Log.e("AcControlActivity", "Error logging AC operation", e)
+            }
+    }
     override fun onNetworkAvailable() {
         Toast.makeText(this, "Network connection restored", Toast.LENGTH_SHORT).show()
         fetchAcDevices()
