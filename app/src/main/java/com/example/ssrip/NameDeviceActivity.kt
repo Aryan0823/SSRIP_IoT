@@ -97,8 +97,8 @@ class NameDeviceActivity : BaseActivity() {
                 "roomTemperature" to 0,
                 "setHumidity" to 0
             )
-            "OutDoor Device" -> hashMapOf(
-                "deviceName" to deviceName,
+            "OutdoorSensors" -> hashMapOf(
+                "deviceName" to "outdoor",
                 "timestamp" to "",
                 "temperature" to 0,
                 "humidity" to 0,
@@ -110,7 +110,7 @@ class NameDeviceActivity : BaseActivity() {
             )
         }
 
-        val collectionName = if (category == "OutDoor Device") "OutdoorSensors" else category
+        val collectionName = if (category == "OutdoorSensors") "OutdoorSensors" else category
 
         db.collection("Data").document(userId).collection(collectionName).document(deviceName)
             .set(deviceData)

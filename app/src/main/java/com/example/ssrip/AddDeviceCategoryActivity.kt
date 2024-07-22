@@ -14,7 +14,6 @@ class AddDeviceCategoryActivity : BaseActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var progressBar: ProgressBar
     private lateinit var outdoorDeviceButton: Button
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_device_category)
@@ -61,6 +60,7 @@ class AddDeviceCategoryActivity : BaseActivity() {
 
     private fun handleOutdoorDeviceClick() {
         val userId = sessionManager.getUserDetails()[SessionManager.KEY_USER_ID] ?: return
+        val userEmail = sessionManager.getUserDetails()[SessionManager.KEY_EMAIL] ?: return
         val outdoorDeviceRef = db.collection("Data").document(userId)
             .collection("OutdoorSensors").document("outdoor")
 
@@ -69,9 +69,10 @@ class AddDeviceCategoryActivity : BaseActivity() {
             hideProgressBar()
             if (!documentSnapshot.exists()) {
                 // Redirect to AddDeviceActivity with OutdoorSensors category and outdoor device name
-                val intent = Intent(this, AddDeviceActivity::class.java).apply {
+                val intent = Intent(this, NameDeviceActivity::class.java).apply {
                     putExtra("CATEGORY", "OutdoorSensors")
                     putExtra("DEVICE_NAME", "outdoor")
+                    putExtra("USER_EMAIL", userEmail)
                 }
                 startActivity(intent)
             } else {

@@ -5,10 +5,13 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Date
 
 class SignUpActivity : BaseActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var firstNameEditText: EditText
@@ -24,6 +27,7 @@ class SignUpActivity : BaseActivity() {
         setContentView(R.layout.activity_sign_up)
 
         auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
         firstNameEditText = findViewById(R.id.firstNameInput)
         lastNameEditText = findViewById(R.id.lastNameInput)
         emailEditText = findViewById(R.id.emailInput)
@@ -49,12 +53,33 @@ class SignUpActivity : BaseActivity() {
             progressBar.visibility = ProgressBar.VISIBLE
 
             auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-                progressBar.visibility = ProgressBar.GONE
                 if (task.isSuccessful) {
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
+                    val user = auth.currentUser
+                    user?.let {
+                        val userData = hashMapOf(
+                            "firstname" to firstName,
+                            "lastname" to lastName,
+                            "phonenumber" to phone,
+                            "current date" to Date(),
+                            "email" to email
+                        )
+
+                        db.collection("users").document(it.uid)
+                            .set(userData)
+                            .addOnSuccessListener {
+                                progressBar.visibility = ProgressBar.GONE
+                                Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, LoginActivity::class.java))
+                                finish()
+                            }
+                            .addOnFailureListener { e ->
+                                progressBar.visibility = ProgressBar.GONE
+                                Toast.makeText(this, "Failed to store user data: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
                 } else {
-                    Toast.makeText(this, "Sign up failed", Toast.LENGTH_SHORT).show()
+                    progressBar.visibility = ProgressBar.GONE
+                    Toast.makeText(this, "Sign up failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
