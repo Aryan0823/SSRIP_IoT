@@ -3,6 +3,7 @@ package com.example.ssrip
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,6 +26,9 @@ class FanControlActivity : BaseActivity() {
     private lateinit var userId: String
     private var fanDevices: MutableList<String> = mutableListOf()
     private var deviceListener: ListenerRegistration? = null
+    private lateinit var deviceAdapter: DeviceAdapter
+
+    private lateinit var deleteDeviceButton: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +56,7 @@ class FanControlActivity : BaseActivity() {
         roomTempValue = findViewById(R.id.roomTempValue)
         outsideTempValue = findViewById(R.id.outsideTempValue)
         powerConsumption = findViewById(R.id.powerconsuption)
+        deleteDeviceButton = findViewById(R.id.deleteDeviceButton)
     }
 
     private fun setupListeners() {
@@ -68,6 +73,14 @@ class FanControlActivity : BaseActivity() {
             updateDevicePowerState(isChecked)
         }
 
+        deleteDeviceButton.setOnClickListener {
+            val selectedDevice = deviceSelector.selectedItem as? String
+            if (selectedDevice != null) {
+                deleteDevice(selectedDevice)
+            } else {
+                Toast.makeText(this, "No device selected", Toast.LENGTH_SHORT).show()
+            }
+        }
         fanSpeedSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
@@ -104,6 +117,53 @@ class FanControlActivity : BaseActivity() {
             setupDeviceListener(fanDevices[0])
         } else {
             displayNoDeviceMessage()
+        }
+    }
+
+    private fun deleteDevice(deviceName: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Device")
+            .setMessage("Are you sure you want to delete $deviceName?")
+            .setPositiveButton("Yes") { _, _ ->
+                db.collection("Data").document(userId).collection("Fan").document(deviceName)
+                    .delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "$deviceName deleted successfully", Toast.LENGTH_SHORT).show()
+                        fanDevices.remove(deviceName)
+                        updateDeviceSelector()
+                        if (fanDevices.isNotEmpty()) {
+                            setupDeviceListener(fanDevices[0])
+                        } else {
+                            displayNoDeviceMessage()
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Error deleting device: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .setNegativeButton("No", null)
+            .show()
+    }
+
+    inner class DeviceAdapter(context: android.content.Context, resource: Int, objects: List<String>) :
+        ArrayAdapter<String>(context, resource, objects) {
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = super.getView(position, convertView, parent)
+            return view
+        }
+
+        override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = layoutInflater.inflate(R.layout.spinner_item_with_delete, parent, false)
+            val textView = view.findViewById<TextView>(R.id.deviceName)
+            val deleteButton = view.findViewById<ImageButton>(R.id.deleteButton)
+
+            textView.text = getItem(position)
+            deleteButton.setOnClickListener {
+                getItem(position)?.let { deviceName -> deleteDevice(deviceName) }
+            }
+
+            return view
         }
     }
 
