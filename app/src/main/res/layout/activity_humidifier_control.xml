@@ -6,32 +6,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".HumidifierControlActivity">
-   <LinearLayout
-        android:id="@+id/deviceSelectorLayout"
+   <Spinner
+        android:id="@+id/deviceSelector"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:orientation="horizontal"
+        android:minHeight="48dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <Spinner
-            android:id="@+id/deviceSelector"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:minHeight="48dp" />
-
-        <ImageButton
-            android:id="@+id/deleteDeviceButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Delete device"
-            android:src="@android:drawable/ic_menu_delete" />
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/materialCardView"
