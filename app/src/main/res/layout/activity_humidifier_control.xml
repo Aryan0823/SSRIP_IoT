@@ -5,17 +5,30 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/background_gradient"
     tools:context=".HumidifierControlActivity">
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="Humidifier Control"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/deviceSelectorLayout"
-        android:layout_width="0dp"
+        android:layout_width="420dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:orientation="horizontal"
+        android:background="@color/background"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/textView4">
 
         <Spinner
             android:id="@+id/deviceSelector"
@@ -40,6 +53,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#7B2160F3"
             android:padding="8dp">
 
             <com.google.android.material.card.MaterialCardView
@@ -70,7 +84,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="Room Humidity"
-                        android:textSize="12sp" />
+                        android:textStyle="bold"
+                        android:textSize="12.5sp" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -104,28 +119,10 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="Outdoor Humidity"
-                        android:textSize="12sp" />
+                        android:textStyle="bold"
+                        android:textSize="12.5sp" />
 
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/powerConsumptionCard"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/powerConsumption"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:text="Check Power Consumption"
-                    android:textAlignment="center"
-                    android:textSize="12sp" />
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -137,6 +134,7 @@
         android:layout_marginTop="24dp"
         android:layout_marginStart="16dp"
         android:text="Power"
+        android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/materialCardView" />
 
@@ -146,7 +144,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:text="Target Humidity"
-        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/powerSwitch" />
@@ -155,10 +154,10 @@
         android:id="@+id/humidityValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:text="50%"
-        android:textSize="24sp"
         android:textStyle="bold"
+        android:textSize="25dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/humidityLabel" />

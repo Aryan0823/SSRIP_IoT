@@ -18,7 +18,6 @@ class LightControlActivity : BaseActivity() {
     private lateinit var brightnessTextView: TextView
     private lateinit var roomLightValue: TextView
     private lateinit var outsideLightValue: TextView
-    private lateinit var powerConsumption: TextView
 
     private lateinit var db: FirebaseFirestore
     private lateinit var functions: FirebaseFunctions
@@ -50,7 +49,6 @@ class LightControlActivity : BaseActivity() {
         brightnessTextView = findViewById(R.id.textView3)
         roomLightValue = findViewById(R.id.roomLightValue)
         outsideLightValue = findViewById(R.id.outsideLightValue)
-        powerConsumption = findViewById(R.id.powerconsuption)
     }
 
     private fun setupListeners() {
@@ -134,7 +132,6 @@ class LightControlActivity : BaseActivity() {
             roomLightValue.text = "${it["roomLight"]} lux"
             // Update outside light and power consumption if available
             outsideLightValue.text = "${it["outsideLight"] ?: "--"} lux"
-            powerConsumption.text = it["powerConsumption"]?.toString() ?: "Check power Consumption"
         }
     }
 
@@ -144,7 +141,6 @@ class LightControlActivity : BaseActivity() {
         brightnessTextView.text = "0%"
         roomLightValue.text = "-- lux"
         outsideLightValue.text = "-- lux"
-        powerConsumption.text = "Check power Consumption"
         Toast.makeText(this, "No light device data available", Toast.LENGTH_SHORT).show()
     }
 

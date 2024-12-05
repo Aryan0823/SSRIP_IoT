@@ -19,7 +19,6 @@ class FanControlActivity : BaseActivity() {
     private lateinit var fanSpeedTextView: TextView
     private lateinit var roomTempValue: TextView
     private lateinit var outsideTempValue: TextView
-    private lateinit var powerConsumption: TextView
 
     private lateinit var db: FirebaseFirestore
     private lateinit var functions: FirebaseFunctions
@@ -55,7 +54,6 @@ class FanControlActivity : BaseActivity() {
         fanSpeedTextView = findViewById(R.id.textView3)
         roomTempValue = findViewById(R.id.roomTempValue)
         outsideTempValue = findViewById(R.id.outsideTempValue)
-        powerConsumption = findViewById(R.id.powerconsuption)
         deleteDeviceButton = findViewById(R.id.deleteDeviceButton)
     }
 
@@ -193,7 +191,6 @@ class FanControlActivity : BaseActivity() {
             roomTempValue.text = "${it["roomTemperature"]} °C"
             fanSpeedSeekBar.progress = (it["setFanSpeed"] as? Long)?.toInt() ?: 0
             fanSpeedTextView.text = fanSpeedSeekBar.progress.toString()
-            powerConsumption.text = "Check power Consumption"
         }
     }
 
@@ -203,7 +200,6 @@ class FanControlActivity : BaseActivity() {
         outsideTempValue.text = "-- °C"
         fanSpeedSeekBar.progress = 0
         fanSpeedTextView.text = "0"
-        powerConsumption.text = "Check power Consumption"
         Toast.makeText(this, "No fan device data available", Toast.LENGTH_SHORT).show()
     }
 

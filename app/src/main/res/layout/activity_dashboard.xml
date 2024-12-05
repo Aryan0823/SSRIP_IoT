@@ -72,7 +72,6 @@
         android:layout_marginEnd="16dp"
         app:cardElevation="8dp"
         app:cardCornerRadius="12dp"
-        app:cardBackgroundColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnSignOut">
@@ -80,6 +79,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/card_background_gradient"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -89,14 +89,14 @@
                 android:text="Outdoor Sensors"
                 android:textStyle="bold"
                 android:textSize="20sp"
-                android:textColor="#2C3E50"
+                android:textColor="#FFFFFF"
                 android:drawablePadding="10dp"
                 android:gravity="center_vertical"/>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E0E0E0"
+                android:background="#FFFFFF"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"/>
 
@@ -104,7 +104,7 @@
                 android:id="@+id/tvOutdoorTemperature"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#2980B9"
+                android:textColor="#FFFFFF"
                 android:drawablePadding="8dp"
                 android:textStyle="bold"
                 android:textSize="16sp"
@@ -115,7 +115,7 @@
                 android:id="@+id/tvOutdoorHumidity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#27AE60"
+                android:textColor="#FFFFFF"
                 android:drawablePadding="8dp"
                 android:textStyle="bold"
                 android:textSize="16sp"
@@ -126,7 +126,7 @@
                 android:id="@+id/tvOutdoorLight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#F39C12"
+                android:textColor="#FFFFFF"
                 android:drawablePadding="8dp"
                 android:textStyle="bold"
                 android:textSize="16sp"
@@ -145,7 +145,6 @@
         android:layout_marginBottom="16dp"
         app:cardElevation="8dp"
         app:cardCornerRadius="12dp"
-        app:cardBackgroundColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -66,4 +66,11 @@
     <!-- Error and Success Colors -->
     <color name="errorColor">#F44336</color> <!-- Red 500 -->
     <color name="successColor">#4CAF50</color> <!-- Green 500 -->
+
+    <color name="primary_dark">#1E88E5</color>
+    <color name="primary_light">#BBDEFB</color>
+    <color name="background_color">#F5F5F5</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="secondary_text">#757575</color>
+
 </resources>

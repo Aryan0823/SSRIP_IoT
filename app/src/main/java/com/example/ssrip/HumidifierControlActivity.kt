@@ -19,7 +19,6 @@ class HumidifierControlActivity : BaseActivity() {
     private lateinit var decreaseHumidity: FloatingActionButton
     private lateinit var increaseHumidity: FloatingActionButton
     private lateinit var roomHumValue: TextView
-    private lateinit var powerConsumption: TextView
     private lateinit var outsideHumValue: TextView
     private lateinit var roomTempValue: TextView
 
@@ -54,7 +53,6 @@ class HumidifierControlActivity : BaseActivity() {
         decreaseHumidity = findViewById(R.id.floatingActionButton2)
         increaseHumidity = findViewById(R.id.floatingActionButton3)
         roomHumValue = findViewById(R.id.roomHumValue)
-        powerConsumption = findViewById(R.id.powerconsuption)
         outsideHumValue = findViewById(R.id.outsideHumValue)
         roomTempValue = findViewById(R.id.roomTempValue)
     }
@@ -135,7 +133,6 @@ class HumidifierControlActivity : BaseActivity() {
             powerSwitch.isChecked = it["deviceStatus"] as? String == "ON"
             roomHumValue.text = "${it["roomHumidity"]} %"
             roomTempValue.text = "${it["roomTemperature"]} °C"
-            powerConsumption.text = "Check power Consumption"
         }
     }
 
@@ -145,7 +142,6 @@ class HumidifierControlActivity : BaseActivity() {
         roomHumValue.text = "-- %"
         outsideHumValue.text = "-- %"
         roomTempValue.text = "-- °C"
-        powerConsumption.text = "Check power Consumption"
         Toast.makeText(this, "No humidifier device data available", Toast.LENGTH_SHORT).show()
     }
 

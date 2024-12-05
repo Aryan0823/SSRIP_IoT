@@ -23,7 +23,8 @@ class AcControlActivity : BaseActivity() {
     private lateinit var increaseTemp: FloatingActionButton
     private lateinit var roomTempValue: TextView
     private lateinit var outsideTempValue: TextView
-    private lateinit var powerConsumption: TextView
+
+
 
     private lateinit var db: FirebaseFirestore
     private lateinit var functions: FirebaseFunctions
@@ -57,7 +58,7 @@ class AcControlActivity : BaseActivity() {
         increaseTemp = findViewById(R.id.floatingActionButton3)
         roomTempValue = findViewById(R.id.roomTempValue)
         outsideTempValue = findViewById(R.id.outsideTempValue)
-        powerConsumption = findViewById(R.id.powerconsuption)
+
     }
 
     private fun setupListeners() {
@@ -144,7 +145,7 @@ class AcControlActivity : BaseActivity() {
         powerSwitch.isChecked = false
         roomTempValue.text = "-- °C"
         outsideTempValue.text = "-- °C"
-        powerConsumption.text = "-- W"
+
         Toast.makeText(this, "No AC device data available", Toast.LENGTH_SHORT).show()
     }
 
