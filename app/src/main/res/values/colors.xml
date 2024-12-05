@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
@@ -30,4 +29,41 @@
         <color name="outline">#79747E</color>
         <color name="surface_variant">#E7E0EC</color>
         <color name="on_surface_variant">#49454F</color>
+    <!-- Primary and Secondary Colors -->
+    <color name="primaryColor">#3F51B5</color> <!-- Indigo 500 -->
+    <color name="primaryColorDark">#303F9F</color> <!-- Indigo 700 -->
+    <color name="primaryColorLight">#C5CAE9</color> <!-- Indigo 100 -->
+    <color name="secondaryColor">#FF4081</color> <!-- Pink A200 -->
+
+    <!-- Accent Colors -->
+    <color name="accentColor">#FFC107</color> <!-- Amber 500 -->
+    <color name="accentColorDark">#FFA000</color> <!-- Amber 700 -->
+
+    <!-- Neutral Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="grayLight">#E0E0E0</color> <!-- Light Gray -->
+    <color name="grayMedium">#757575</color> <!-- Medium Gray -->
+    <color name="grayDark">#424242</color> <!-- Dark Gray -->
+
+    <!-- Text Colors -->
+    <color name="textPrimary">#212121</color> <!-- Almost Black -->
+    <color name="textSecondary">#757575</color> <!-- Medium Gray -->
+    <color name="textHint">#BDBDBD</color> <!-- Light Gray -->
+
+    <!-- Button Colors -->
+    <color name="buttonBackground">#3F51B5</color> <!-- Indigo 500 -->
+    <color name="buttonText">#FFFFFF</color> <!-- White -->
+
+    <!-- Gradient Colors -->
+    <color name="gradientStart">#1E3C72</color> <!-- Deep Blue -->
+    <color name="gradientEnd">#2A5298</color> <!-- Lighter Blue -->
+
+    <!-- Background Colors -->
+    <color name="backgroundLight">#F5F5F5</color> <!-- Light Gray -->
+    <color name="backgroundDark">#121212</color> <!-- Dark Gray for Dark Theme -->
+
+    <!-- Error and Success Colors -->
+    <color name="errorColor">#F44336</color> <!-- Red 500 -->
+    <color name="successColor">#4CAF50</color> <!-- Green 500 -->
 </resources>

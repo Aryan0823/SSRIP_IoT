@@ -28,7 +28,7 @@ class MainActivity : BaseActivity() {
         setContentView(R.layout.activity_main)
 
         progressBar = findViewById(R.id.progressBar)
-        loginCard = findViewById(R.id.loginCard)
+        loginCard = findViewById(R.id.welcomeCard)
         loginButton = findViewById(R.id.loginButton)
         signUpButton = findViewById(R.id.signUpButton)
 

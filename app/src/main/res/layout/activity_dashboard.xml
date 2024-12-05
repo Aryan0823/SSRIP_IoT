@@ -1,42 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F0F4F8"
     tools:context=".DashboardActivity">
 
-    <TextView
-        android:id="@+id/tvWelcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:textSize="16sp"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#2C3E50"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Welcome, user@example.com" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnAddDevice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:clickable="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/add_device" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:text="Welcome, user@example.com" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnAddDevice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:backgroundTint="#3498DB"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:srcCompat="@drawable/add_device"
+                app:tint="@android:color/white"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <Button
         android:id="@+id/btnSignOut"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="#E74C3C"
         android:text="Sign Out"
+        android:textColor="@android:color/white"
         android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="@+id/tvWelcome"
-        app:layout_constraintTop_toBottomOf="@+id/tvWelcome" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/topAppBar"
+        tools:ignore="NotSibling" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardOutdoorSensors"
@@ -45,8 +70,9 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        app:cardElevation="4dp"
-        app:cardCornerRadius="8dp"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="12dp"
+        app:cardBackgroundColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnSignOut">
@@ -57,24 +83,31 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:text="Outdoor Sensors"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textColor="#2C3E50"
+                android:drawablePadding="10dp"
+                android:gravity="center_vertical"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Outdoor Sensors"
-                    android:textStyle="bold"
-                    android:textSize="18sp"/>
-
-            </LinearLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E0E0E0"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"/>
 
             <TextView
                 android:id="@+id/tvOutdoorTemperature"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="#2980B9"
+                android:drawablePadding="8dp"
+                android:textStyle="bold"
+                android:textSize="16sp"
                 android:layout_marginTop="8dp"
                 tools:text="Temperature: 25°C"/>
 
@@ -82,6 +115,10 @@
                 android:id="@+id/tvOutdoorHumidity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="#27AE60"
+                android:drawablePadding="8dp"
+                android:textStyle="bold"
+                android:textSize="16sp"
                 android:layout_marginTop="4dp"
                 tools:text="Humidity: 60%"/>
 
@@ -89,6 +126,10 @@
                 android:id="@+id/tvOutdoorLight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="#F39C12"
+                android:drawablePadding="8dp"
+                android:textStyle="bold"
+                android:textSize="16sp"
                 android:layout_marginTop="4dp"
                 tools:text="Light: 500 lux"/>
 
@@ -102,8 +143,9 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
-        app:cardElevation="4dp"
-        app:cardCornerRadius="8dp"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="12dp"
+        app:cardBackgroundColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -111,10 +153,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-
-            >
-
+            android:layout_height="match_parent">
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardAC"
@@ -122,6 +161,7 @@
                 android:layout_height="0dp"
                 app:cardElevation="4dp"
                 app:cardCornerRadius="8dp"
+                app:cardBackgroundColor="#ECF0F1"
                 app:layout_constraintEnd_toStartOf="@+id/cardFan"
                 app:layout_constraintHeight_percent="0.5"
                 app:layout_constraintStart_toStartOf="parent"
@@ -132,17 +172,18 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:padding="8dp">
-
                     <ImageButton
                         android:id="@+id/btnAC"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
                         android:background="@null"
+                        android:scaleType="centerCrop"
                         app:layout_constraintBottom_toTopOf="@id/tvAC"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_ac" />
+                        app:srcCompat="@drawable/ic_ac_modern" />
+
 
                     <TextView
                         android:id="@+id/tvAC"
@@ -150,7 +191,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="AC"
-                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50"
+                        android:textSize="16sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -165,6 +208,7 @@
                 android:layout_height="0dp"
                 app:cardElevation="4dp"
                 app:cardCornerRadius="8dp"
+                app:cardBackgroundColor="#ECF0F1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHeight_percent="0.5"
                 app:layout_constraintStart_toEndOf="@+id/cardAC"
@@ -178,14 +222,15 @@
 
                     <ImageButton
                         android:id="@+id/btnFan"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
                         android:background="@null"
+                        android:scaleType="centerCrop"
                         app:layout_constraintBottom_toTopOf="@id/tvFan"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_fan" />
+                        app:srcCompat="@drawable/ic_fan_modern" />
 
                     <TextView
                         android:id="@+id/tvFan"
@@ -193,7 +238,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Fan"
-                        android:textSize="14sp"
+                        android:textColor="#2C3E50"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -207,6 +254,7 @@
                 android:layout_height="0dp"
                 app:cardElevation="4dp"
                 app:cardCornerRadius="8dp"
+                app:cardBackgroundColor="#ECF0F1"
                 app:layout_constraintEnd_toStartOf="@+id/cardLight"
                 app:layout_constraintHeight_percent="0.5"
                 app:layout_constraintStart_toStartOf="parent"
@@ -220,14 +268,15 @@
 
                     <ImageButton
                         android:id="@+id/btnHumidifier"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
                         android:background="@null"
+                        android:scaleType="centerCrop"
                         app:layout_constraintBottom_toTopOf="@id/tvHumidifier"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_humidifier" />
+                        app:srcCompat="@drawable/ic_humidifier_modern" />
 
                     <TextView
                         android:id="@+id/tvHumidifier"
@@ -235,7 +284,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Humidifier"
-                        android:textSize="14sp"
+                        android:textColor="#2C3E50"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -249,6 +300,7 @@
                 android:layout_height="0dp"
                 app:cardElevation="4dp"
                 app:cardCornerRadius="8dp"
+                app:cardBackgroundColor="#ECF0F1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHeight_percent="0.5"
                 app:layout_constraintStart_toEndOf="@+id/cardHumidifier"
@@ -262,22 +314,24 @@
 
                     <ImageButton
                         android:id="@+id/btnLight"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
                         android:background="@null"
+                        android:scaleType="centerCrop"
                         app:layout_constraintBottom_toTopOf="@id/tvLight"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_light" />
-
+                        app:srcCompat="@drawable/ic_light_modern" />
                     <TextView
                         android:id="@+id/tvLight"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Light"
-                        android:textSize="14sp"
+                        android:textColor="#2C3E50"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
