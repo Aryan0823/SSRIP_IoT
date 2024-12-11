@@ -28,21 +28,21 @@
 
         <EditText
             android:id="@+id/firstNameInput"
-            android:layout_width="379dp"
+            android:layout_width="350dp"
             android:layout_height="50dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="28dp"
             android:background="@drawable/edit_text_background"
             android:hint="First Name"
             android:inputType="textPersonName"
             android:padding="12dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="0.517"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView2" />
 
         <EditText
             android:id="@+id/lastNameInput"
-            android:layout_width="379dp"
+            android:layout_width="350dp"
             android:layout_height="50dp"
             android:layout_marginTop="16dp"
             android:background="@drawable/edit_text_background"
@@ -55,7 +55,7 @@
 
         <EditText
             android:id="@+id/emailInput"
-            android:layout_width="379dp"
+            android:layout_width="350dp"
             android:layout_height="50dp"
             android:hint="Email"
             android:inputType="textEmailAddress"
@@ -70,7 +70,7 @@
 
         <EditText
             android:id="@+id/phoneNumberInput"
-            android:layout_width="379dp"
+            android:layout_width="350dp"
             android:layout_height="50dp"
             android:hint="Phone Number"
             android:inputType="phone"
@@ -83,7 +83,7 @@
 
         <EditText
             android:id="@+id/passwordInput"
-            android:layout_width="379dp"
+            android:layout_width="350dp"
             android:layout_height="50dp"
             android:hint="Password"
             android:inputType="textPassword"
